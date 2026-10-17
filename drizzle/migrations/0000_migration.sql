@@ -1,4 +1,4 @@
-CREATE TABLE public.profiles (
+CREATE TABLE IF NOT EXISTS public.profiles (
   id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   email text NOT NULL DEFAULT '',
   name text NOT NULL DEFAULT '',
@@ -8,9 +8,10 @@ CREATE TABLE public.profiles (
 GRANT SELECT ON public.profiles TO authenticated;
 GRANT ALL ON public.profiles TO service_role;
 ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users read own profile" ON public.profiles;
 CREATE POLICY "Users read own profile" ON public.profiles FOR SELECT TO authenticated USING (auth.uid() = id);
 
-CREATE TABLE public.wallets (
+CREATE TABLE IF NOT EXISTS public.wallets (
   user_id uuid PRIMARY KEY,
   balance integer NOT NULL DEFAULT 0,
   updated_at timestamptz NOT NULL DEFAULT now()
@@ -18,9 +19,10 @@ CREATE TABLE public.wallets (
 GRANT SELECT ON public.wallets TO authenticated;
 GRANT ALL ON public.wallets TO service_role;
 ALTER TABLE public.wallets ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users read own wallet" ON public.wallets;
 CREATE POLICY "Users read own wallet" ON public.wallets FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
-CREATE TABLE public.wallet_transactions (
+CREATE TABLE IF NOT EXISTS public.wallet_transactions (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
   amount integer NOT NULL,
@@ -28,25 +30,27 @@ CREATE TABLE public.wallet_transactions (
   note text NOT NULL DEFAULT '',
   created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX ON public.wallet_transactions(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS wallet_transactions_user_idx ON public.wallet_transactions(user_id, created_at DESC);
 GRANT SELECT ON public.wallet_transactions TO authenticated;
 GRANT ALL ON public.wallet_transactions TO service_role;
 ALTER TABLE public.wallet_transactions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users read own transactions" ON public.wallet_transactions;
 CREATE POLICY "Users read own transactions" ON public.wallet_transactions FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
-CREATE TABLE public.login_history (
+CREATE TABLE IF NOT EXISTS public.login_history (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
   user_agent text NOT NULL DEFAULT '',
   created_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX ON public.login_history(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS login_history_user_idx ON public.login_history(user_id, created_at DESC);
 GRANT SELECT ON public.login_history TO authenticated;
 GRANT ALL ON public.login_history TO service_role;
 ALTER TABLE public.login_history ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users read own logins" ON public.login_history;
 CREATE POLICY "Users read own logins" ON public.login_history FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
-CREATE TABLE public.deposit_requests (
+CREATE TABLE IF NOT EXISTS public.deposit_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid NOT NULL,
   user_email text NOT NULL DEFAULT '',
@@ -59,9 +63,10 @@ CREATE TABLE public.deposit_requests (
 GRANT SELECT ON public.deposit_requests TO authenticated;
 GRANT ALL ON public.deposit_requests TO service_role;
 ALTER TABLE public.deposit_requests ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users read own deposits" ON public.deposit_requests;
 CREATE POLICY "Users read own deposits" ON public.deposit_requests FOR SELECT TO authenticated USING (auth.uid() = user_id);
 
-CREATE TABLE public.settings (
+CREATE TABLE IF NOT EXISTS public.settings (
   id integer PRIMARY KEY DEFAULT 1,
   upi_id text NOT NULL DEFAULT '',
   min_deposit integer NOT NULL DEFAULT 100,
@@ -72,9 +77,9 @@ CREATE TABLE public.settings (
 );
 GRANT ALL ON public.settings TO service_role;
 ALTER TABLE public.settings ENABLE ROW LEVEL SECURITY;
-INSERT INTO public.settings (id) VALUES (1);
+INSERT INTO public.settings (id) VALUES (1) ON CONFLICT DO NOTHING;
 
-CREATE TABLE public.templates (
+CREATE TABLE IF NOT EXISTS public.templates (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   description text NOT NULL DEFAULT '',
@@ -90,7 +95,7 @@ CREATE TABLE public.templates (
 GRANT ALL ON public.templates TO service_role;
 ALTER TABLE public.templates ENABLE ROW LEVEL SECURITY;
 
-CREATE TABLE public.build_requests (
+CREATE TABLE IF NOT EXISTS public.build_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id uuid,
   template_id uuid REFERENCES public.templates(id) ON DELETE SET NULL,
@@ -114,7 +119,7 @@ CREATE TABLE public.build_requests (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
-CREATE INDEX ON public.build_requests(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS build_requests_user_idx ON public.build_requests(user_id, created_at DESC);
 GRANT ALL ON public.build_requests TO service_role;
 ALTER TABLE public.build_requests ENABLE ROW LEVEL SECURITY;
 
@@ -129,6 +134,7 @@ BEGIN
   INSERT INTO public.wallets (user_id) VALUES (NEW.id) ON CONFLICT DO NOTHING;
   RETURN NEW;
 END $$;
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
