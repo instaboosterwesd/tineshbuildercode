@@ -1,1 +1,1 @@
--- Empty baseline for the remixed project. Existing application schema and data are unchanged.
+-- Empty baseline for this remixed project. Existing database schema and data are unchanged.
