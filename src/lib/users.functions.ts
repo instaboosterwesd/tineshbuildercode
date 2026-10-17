@@ -1,66 +1,89 @@
 import { createServerFn } from "@tanstack/react-start";
-import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { adminDb, checkPassword, int, str, uuid, walletChange } from "@/lib/server-helpers";
+import { requireFirebaseAuth } from "@/integrations/firebase/auth-middleware";
+import { checkPassword, int, str, uuid, walletChange } from "@/lib/server-helpers";
+import { validateProfileDetails } from "@/lib/profile-completion";
+
+async function adb() {
+  return import("@/integrations/firebase/admin.server");
+}
+
+function keyed<T extends object>(rec: Record<string, T> | null): (T & { id: string })[] {
+  return Object.entries(rec ?? {}).map(([id, v]) => ({ ...v, id }));
+}
+
+type Profile = { name?: string; email?: string; telegram_id?: string; avatar_url?: string; created_at?: string };
+type Tx = { amount: number; kind: string; note: string; created_at: string };
+type Login = { user_agent: string; created_at: string };
+type BuildLite = { user_id?: string; app_name?: string; template_name?: string; status?: string; charged?: number; created_at?: string };
 
 /* ---------- Signed-in user ---------- */
 
-export const getMyProfile = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
+export const getProfileCompletion = createServerFn({ method: "GET" })
+  .middleware([requireFirebaseAuth])
   .handler(async ({ context }) => {
-    const db = await adminDb();
-    const [{ data: p }, { data: logins }, { data: w }, { count: builds }] = await Promise.all([
-      db.from("profiles").select("name, email, telegram_id, avatar_url, created_at").eq("id", context.userId).maybeSingle(),
-      db.from("login_history").select("id, user_agent, created_at").eq("user_id", context.userId).order("created_at", { ascending: false }).limit(20),
-      db.from("wallets").select("balance").eq("user_id", context.userId).maybeSingle(),
-      db.from("build_requests").select("id", { count: "exact", head: true }).eq("user_id", context.userId),
+    const db = await adb();
+    const path = `profiles/${context.userId}`;
+    const profile = await db.dbGet<Profile>(path);
+    const defaults = {
+      ...(!profile?.email && context.claims.email ? { email: context.claims.email } : {}),
+      ...(!profile?.created_at ? { created_at: new Date().toISOString() } : {}),
+    };
+    if (Object.keys(defaults).length) await db.dbUpdate(path, defaults);
+    return { ...profile, ...defaults };
+  });
+
+export const getMyProfile = createServerFn({ method: "GET" })
+  .middleware([requireFirebaseAuth])
+  .handler(async ({ context }) => {
+    const db = await adb();
+    const uid = context.userId;
+    const [p, logins, balance, builds] = await Promise.all([
+      db.dbGet<Profile>(`profiles/${uid}`),
+      db.dbGet<Record<string, Login>>(`loginHistory/${uid}`),
+      db.dbGet<number>(`wallets/${uid}/balance`),
+      db.dbGet<Record<string, BuildLite>>("buildRequests"),
     ]);
-    return { profile: p, logins: logins ?? [], balance: w?.balance ?? 0, builds: builds ?? 0 };
+    const myLogins = keyed(logins).sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 20);
+    const myBuilds = Object.values(builds ?? {}).filter((b) => b.user_id === uid).length;
+    return { profile: p ?? null, logins: myLogins, balance: balance ?? 0, builds: myBuilds };
   });
 
 export const updateMyProfile = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((d: Record<string, unknown>) => ({
-    name: str(d?.["name"], "Name", 80),
-    telegram_id: str(d?.["telegram_id"], "Telegram", 64, false).replace(/^@/, ""),
-  }))
+  .middleware([requireFirebaseAuth])
+  .inputValidator((d: Record<string, unknown>) => validateProfileDetails(d))
   .handler(async ({ data, context }) => {
-    const db = await adminDb();
-    const { error } = await db.from("profiles").update(data).eq("id", context.userId);
-    if (error) throw new Error(error.message);
+    const db = await adb();
+    const path = `profiles/${context.userId}`;
+    const existing = await db.dbGet<Profile>(path);
+    await db.dbUpdate(path, {
+      ...data,
+      ...(context.claims.email ? { email: context.claims.email } : {}),
+      ...(!existing?.created_at ? { created_at: new Date().toISOString() } : {}),
+    });
     return { ok: true };
   });
 
 export const recordLogin = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireFirebaseAuth])
   .inputValidator((d: { user_agent?: string }) => ({ user_agent: str(d?.user_agent, "UA", 400, false) }))
   .handler(async ({ data, context }) => {
-    const db = await adminDb();
-    await db.from("login_history").insert({ user_id: context.userId, user_agent: data.user_agent });
+    const db = await adb();
+    await db.dbPush(`loginHistory/${context.userId}`, { user_agent: data.user_agent, created_at: new Date().toISOString() });
     return { ok: true };
   });
 
 export const uploadAvatar = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
+  .middleware([requireFirebaseAuth])
   .inputValidator((d: { image?: string }) => {
     const image = String(d?.image ?? "").replace(/^data:image\/[a-z+]+;base64,/, "");
     if (!image || image.length > 4_500_000 || !/^[A-Za-z0-9+/=]+$/.test(image)) throw new Error("Image must be under 3 MB");
     return { image };
   })
   .handler(async ({ data, context }) => {
-    const key = process.env["IMGBB_API_KEY"];
-    if (!key) throw new Error("Photo upload is not configured");
-    const form = new FormData();
-    form.append("image", data.image);
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, { method: "POST", body: form });
-    const json = (await res.json().catch(() => null)) as { data?: { display_url?: string; url?: string } } | null;
-    const url = json?.data?.display_url || json?.data?.url;
-    if (!res.ok || !url) {
-      console.error("imgbb upload failed", res.status, json);
-      throw new Error("Photo upload failed. Please try again.");
-    }
-    const db = await adminDb();
-    const { error } = await db.from("profiles").update({ avatar_url: url }).eq("id", context.userId);
-    if (error) throw new Error(error.message);
+    const { uploadImage } = await import("@/lib/image-upload");
+    const url = await uploadImage(data.image);
+    const db = await adb();
+    await db.dbUpdate(`profiles/${context.userId}`, { avatar_url: url });
     return { url };
   });
 
@@ -70,47 +93,46 @@ export const adminListUsers = createServerFn({ method: "POST" })
   .inputValidator((d: { password: string }) => d)
   .handler(async ({ data }) => {
     checkPassword(data?.password);
-    const db = await adminDb();
-    const [{ data: users, error }, { data: wallets }, { data: builds }] = await Promise.all([
-      db.from("profiles").select("id, email, name, telegram_id, created_at").order("created_at", { ascending: false }).limit(1000),
-      db.from("wallets").select("user_id, balance"),
-      db.from("build_requests").select("user_id").not("user_id", "is", null).limit(10000),
+    const db = await adb();
+    const [users, wallets, builds] = await Promise.all([
+      db.dbGet<Record<string, Profile>>("profiles"),
+      db.dbGet<Record<string, { balance: number }>>("wallets"),
+      db.dbGet<Record<string, BuildLite>>("buildRequests"),
     ]);
-    if (error) throw new Error(error.message);
-    const bal = new Map((wallets ?? []).map((w) => [w.user_id, w.balance]));
     const cnt = new Map<string, number>();
-    (builds ?? []).forEach((b) => b.user_id && cnt.set(b.user_id, (cnt.get(b.user_id) ?? 0) + 1));
-    return (users ?? []).map((u) => ({ ...u, balance: bal.get(u.id) ?? 0, builds: cnt.get(u.id) ?? 0 }));
+    Object.values(builds ?? {}).forEach((b) => b.user_id && cnt.set(b.user_id, (cnt.get(b.user_id) ?? 0) + 1));
+    return keyed(users)
+      .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))
+      .slice(0, 1000)
+      .map((u) => ({ ...u, balance: wallets?.[u.id]?.balance ?? 0, builds: cnt.get(u.id) ?? 0 }));
   });
 
 export const adminUpdateUser = createServerFn({ method: "POST" })
   .inputValidator((d: Record<string, unknown>) => ({
     password: d?.["password"] as string,
-    id: uuid(d?.["id"], "user"),
+    id: str(d?.["id"], "user", 128),
     name: str(d?.["name"], "Name", 80),
     telegram_id: str(d?.["telegram_id"], "Telegram", 64, false).replace(/^@/, ""),
   }))
   .handler(async ({ data }) => {
     checkPassword(data.password);
-    const db = await adminDb();
-    const { error } = await db.from("profiles").update({ name: data.name, telegram_id: data.telegram_id }).eq("id", data.id);
-    if (error) throw new Error(error.message);
+    const db = await adb();
+    await db.dbUpdate(`profiles/${data.id}`, { name: data.name, telegram_id: data.telegram_id });
     return { ok: true };
   });
 
 export const adminAdjustBalance = createServerFn({ method: "POST" })
   .inputValidator((d: Record<string, unknown>) => ({
     password: d?.["password"] as string,
-    id: uuid(d?.["id"], "user"),
+    id: str(d?.["id"], "user", 128),
     amount: int(d?.["amount"], "amount", -1_000_000, 1_000_000),
     note: str(d?.["note"], "Note", 200, false),
   }))
   .handler(async ({ data }) => {
     checkPassword(data.password);
     if (data.amount === 0) throw new Error("Amount can't be 0");
-    const db = await adminDb();
     try {
-      const balance = await walletChange(db, data.id, data.amount, "admin", data.note || (data.amount > 0 ? "Added by admin" : "Deducted by admin"));
+      const balance = await walletChange(data.id, data.amount, "admin", data.note || (data.amount > 0 ? "Added by admin" : "Deducted by admin"));
       return { balance };
     } catch (e) {
       if ((e as Error).message === "INSUFFICIENT_BALANCE") throw new Error("User doesn't have that much balance");
@@ -119,30 +141,42 @@ export const adminAdjustBalance = createServerFn({ method: "POST" })
   });
 
 export const adminDeleteUser = createServerFn({ method: "POST" })
-  .inputValidator((d: { password: string; id: string }) => ({ password: d?.password, id: uuid(d?.id, "user") }))
+  .inputValidator((d: { password: string; id: string }) => ({ password: d?.password, id: str(d?.id, "user", 128) }))
   .handler(async ({ data }) => {
     checkPassword(data.password);
-    const db = await adminDb();
+    const db = await adb();
     await Promise.all([
-      db.from("wallets").delete().eq("user_id", data.id),
-      db.from("wallet_transactions").delete().eq("user_id", data.id),
-      db.from("login_history").delete().eq("user_id", data.id),
-      db.from("deposit_requests").delete().eq("user_id", data.id),
+      db.dbRemove(`wallets/${data.id}`),
+      db.dbRemove(`walletTransactions/${data.id}`),
+      db.dbRemove(`loginHistory/${data.id}`),
+      db.dbRemove(`profiles/${data.id}`),
     ]);
-    const { error } = await db.auth.admin.deleteUser(data.id);
-    if (error) throw new Error(error.message);
+    // Remove the Firebase Auth account too.
+    const token = await db.adminAccessToken();
+    await fetch("https://identitytoolkit.googleapis.com/v1/projects/tineshfirebase/accounts:delete", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ localId: data.id }),
+    }).catch(() => {});
     return { ok: true };
   });
 
 export const adminUserDetail = createServerFn({ method: "POST" })
-  .inputValidator((d: { password: string; id: string }) => ({ password: d?.password, id: uuid(d?.id, "user") }))
+  .inputValidator((d: { password: string; id: string }) => ({ password: d?.password, id: str(d?.id, "user", 128) }))
   .handler(async ({ data }) => {
     checkPassword(data.password);
-    const db = await adminDb();
-    const [{ data: tx }, { data: logins }, { data: builds }] = await Promise.all([
-      db.from("wallet_transactions").select("id, amount, kind, note, created_at").eq("user_id", data.id).order("created_at", { ascending: false }).limit(50),
-      db.from("login_history").select("id, user_agent, created_at").eq("user_id", data.id).order("created_at", { ascending: false }).limit(20),
-      db.from("build_requests").select("id, app_name, template_name, status, charged, created_at").eq("user_id", data.id).order("created_at", { ascending: false }).limit(50),
+    const db = await adb();
+    const [tx, logins, builds] = await Promise.all([
+      db.dbGet<Record<string, Tx>>(`walletTransactions/${data.id}`),
+      db.dbGet<Record<string, Login>>(`loginHistory/${data.id}`),
+      db.dbGet<Record<string, BuildLite>>("buildRequests"),
     ]);
-    return { transactions: tx ?? [], logins: logins ?? [], builds: builds ?? [] };
+    return {
+      transactions: keyed(tx).sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 50),
+      logins: keyed(logins).sort((a, b) => b.created_at.localeCompare(a.created_at)).slice(0, 20),
+      builds: keyed(builds)
+        .filter((b) => b.user_id === data.id)
+        .sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""))
+        .slice(0, 50),
+    };
   });

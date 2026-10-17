@@ -1,1 +1,1 @@
--- Empty baseline for this remixed project. Existing database schema and data are unchanged.
+-- Custom SQL migration file, put your code below! --

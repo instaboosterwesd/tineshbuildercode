@@ -21,12 +21,19 @@ import { adminGetSettings, adminSaveSettings, adminListDeposits, adminDecideDepo
 import { adminListUsers, adminUpdateUser, adminAdjustBalance, adminDeleteUser, adminUserDetail } from "@/lib/users.functions";
 import { BASE_APKS, baseApkLabel } from "@/lib/base-apks";
 import { cn } from "@/lib/utils";
+import { HackerLoader, LoadingPanel } from "@/components/effects/HackerLoader";
+import { QueryFeedback } from "@/components/QueryFeedback";
+import { withRequestTimeout } from "@/lib/request-timeout";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
-      { title: "Admin panel — Builder" },
+      { title: "Admin panel — AppForge" },
       { name: "description", content: "Manage builds, users, deposits, templates and site settings." },
+      { property: "og:title", content: "Admin panel — AppForge" },
+      { property: "og:description", content: "Manage AppForge users, deposits, templates and builds." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -73,7 +80,7 @@ function AdminLogin({ onOk }: { onOk: (p: string) => void }) {
         </div>
         <h1 className="text-2xl font-bold">Admin panel</h1>
         <Input type="password" placeholder="Admin password" value={v} onChange={(e) => setV(e.target.value)} autoFocus />
-        <Button variant="hero" className="w-full" disabled={busy || !v}><Lock className="size-4" /> Unlock</Button>
+        <Button variant="hero" className="w-full" disabled={busy || !v}>{busy ? <HackerLoader compact /> : <><Lock className="size-4" /> Unlock</>}</Button>
       </form>
     </main>
   );
@@ -103,7 +110,7 @@ function Panel({ pw, logout }: { pw: string; logout: () => void }) {
 
   return (
     <div className="min-h-screen md:flex">
-      <aside className="border-b border-border bg-card/60 backdrop-blur md:sticky md:top-0 md:h-screen md:w-60 md:shrink-0 md:border-b-0 md:border-r">
+      <aside className="border-b border-glass-border glass-panel md:sticky md:top-0 md:h-screen md:w-60 md:shrink-0 md:border-b-0 md:border-r">
         <div className="flex items-center gap-2 px-4 py-4">
           <span className="grid size-9 place-items-center rounded-xl bg-gradient-primary shadow-glow"><Shield className="size-4 text-primary-foreground" /></span>
           <span className="font-display text-lg font-bold">Admin</span>
@@ -252,7 +259,7 @@ function Builds({ pw }: { pw: string }) {
     <>
       <Toolbar q={q} setQ={setQ} filters={["all", "pending", "building", "success", "failed", "rejected"]} filter={f} setFilter={setF}
         onExport={() => csv("builds.csv", rows.map(({ id, app_name, package_name, template_name, requester_email, status, charged, created_at }) => ({ id, app_name, package_name, template_name, requester_email, status, charged, created_at })))} />
-      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {isLoading && <LoadingPanel />}
       <div className="grid gap-3">
         {rows.map((r) => (
           <div key={r.id} className="surface flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
@@ -310,7 +317,7 @@ function Deposits({ pw }: { pw: string }) {
     <>
       <Toolbar q={q} setQ={setQ} filters={["pending", "approved", "rejected", "all"]} filter={f} setFilter={setF}
         onExport={() => csv("deposits.csv", rows.map(({ id, user_email, amount, utr, status, created_at }) => ({ id, user_email, amount, utr, status, created_at })))} />
-      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {isLoading && <LoadingPanel />}
       <div className="grid gap-3">
         {rows.map((d) => (
           <div key={d.id} className="surface flex flex-wrap items-center gap-3 p-4">
@@ -350,7 +357,7 @@ function UsersTab({ pw }: { pw: string }) {
     <>
       <Toolbar q={q} setQ={setQ} filters={["newest", "balance", "builds"]} filter={sort} setFilter={setSort}
         onExport={() => csv("users.csv", rows.map(({ id, name, email, telegram_id, balance, builds, created_at }) => ({ id, name, email, telegram_id, balance, builds, created_at })))} />
-      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {isLoading && <LoadingPanel />}
       <div className="surface overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="text-left text-xs text-muted-foreground">
@@ -363,7 +370,7 @@ function UsersTab({ pw }: { pw: string }) {
                 <td className="p-3">{u.telegram_id ? `@${u.telegram_id}` : "—"}</td>
                 <td className="p-3 font-semibold">₹{u.balance}</td>
                 <td className="p-3">{u.builds}</td>
-                <td className="p-3 text-xs text-muted-foreground">{new Date(u.created_at).toLocaleDateString("en-IN")}</td>
+                <td className="p-3 text-xs text-muted-foreground">{new Date(u.created_at ?? 0).toLocaleDateString("en-IN")}</td>
                 <td className="p-3 text-right"><Pencil className="inline size-4 text-muted-foreground" /></td>
               </tr>
             ))}
@@ -402,7 +409,7 @@ function UserDialog({ pw, user, onClose }: { pw: string; user: UserRow; onClose:
             <h3 className="text-sm font-semibold">Profile</h3>
             <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
             <Input value={tg} onChange={(e) => setTg(e.target.value)} placeholder="Telegram username" />
-            <Button size="sm" variant="hero" disabled={busy} onClick={() => run(async () => { await adminUpdateUser({ data: { password: pw, id: user.id, name, telegram_id: tg } }); toast.success("Saved"); refresh(); })}>Save profile</Button>
+            <Button size="sm" variant="hero" disabled={busy} onClick={() => run(async () => { await adminUpdateUser({ data: { password: pw, id: user.id, name, telegram_id: tg } }); toast.success("Saved"); refresh(); })}>{busy ? <HackerLoader compact label="Saving profile" /> : "Save profile"}</Button>
           </section>
           <section className="space-y-2 rounded-2xl bg-muted/50 p-4 clay-inset">
             <div className="flex items-center justify-between"><h3 className="text-sm font-semibold">Wallet</h3><span className="text-xl font-bold text-primary">₹{balance}</span></div>
@@ -416,7 +423,7 @@ function UserDialog({ pw, user, onClose }: { pw: string; user: UserRow; onClose:
             </div>
           </section>
           <History title="Wallet history" items={(detail.data?.transactions ?? []).map((t) => ({ id: t.id, left: t.note || t.kind, right: `${t.amount > 0 ? "+" : ""}₹${t.amount}`, at: t.created_at }))} />
-          <History title="Builds" items={(detail.data?.builds ?? []).map((b) => ({ id: b.id, left: `${b.app_name} · ${b.status}`, right: `₹${b.charged}`, at: b.created_at }))} />
+          <History title="Builds" items={(detail.data?.builds ?? []).map((b) => ({ id: b.id, left: `${b.app_name} · ${b.status}`, right: `₹${b.charged}`, at: b.created_at ?? "" }))} />
           <History title="Login history" items={(detail.data?.logins ?? []).map((l) => ({ id: l.id, left: l.user_agent.slice(0, 50) || "Unknown device", right: "", at: l.created_at }))} />
           <Button variant="destructive" className="w-full" disabled={busy} onClick={() => confirm(`Delete ${user.email} permanently?`) && run(async () => { await adminDeleteUser({ data: { password: pw, id: user.id } }); toast.success("User deleted"); refresh(); onClose(); })}>
             <Trash2 className="size-4" /> Delete user
@@ -459,7 +466,7 @@ function Templates({ pw }: { pw: string }) {
         <div className="flex-1"><Toolbar q={q} setQ={setQ} /></div>
         <Button variant="hero" onClick={() => setEdit({ base_apk: "bingo", price: 0, show_preview: true, html: "" })}><Plus className="size-4" /> New</Button>
       </div>
-      {isLoading && <p className="text-sm text-muted-foreground">Loading…</p>}
+      {isLoading && <LoadingPanel />}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {rows.map((t) => (
           <div key={t.id} className="surface overflow-hidden">
@@ -510,7 +517,7 @@ function TemplateDialog({ pw, t, onClose }: { pw: string; t: Partial<Tpl>; onClo
           </div>
           <Textarea placeholder="HTML" value={v.html} onChange={set("html")} rows={8} className="font-mono text-xs" required />
           <label className="flex items-center justify-between text-sm">Show live preview to users <Switch checked={v.show_preview} onCheckedChange={(c) => setV({ ...v, show_preview: c })} /></label>
-          <Button variant="hero" className="w-full" disabled={busy}>Save template</Button>
+          <Button variant="hero" className="w-full" disabled={busy}>{busy ? <HackerLoader compact label="Saving template" /> : "Save template"}</Button>
         </form>
       </DialogContent>
     </Dialog>
@@ -519,17 +526,27 @@ function TemplateDialog({ pw, t, onClose }: { pw: string; t: Partial<Tpl>; onClo
 
 function SettingsTab({ pw }: { pw: string }) {
   const qc = useQueryClient();
-  const { data } = useQuery({ queryKey: ["adm", "settings"], queryFn: () => adminGetSettings({ data: { password: pw } }) });
+  const settings = useQuery({ queryKey: ["adm", "settings"], queryFn: () => withRequestTimeout(() => adminGetSettings({ data: { password: pw } })), retry: false });
+  const { data } = settings;
   const [v, setV] = useState<NonNullable<typeof data> | null>(null);
   useEffect(() => { if (data) setV(data); }, [data]);
   const [busy, setBusy] = useState(false);
-  if (!v) return <p className="text-sm text-muted-foreground">Loading…</p>;
+  if (!v) return <QueryFeedback failed={settings.isError} retry={() => settings.refetch()} label="settings" />;
   return (
     <form className="grid gap-4 lg:grid-cols-2" onSubmit={async (e) => {
       e.preventDefault(); setBusy(true);
       try { await adminSaveSettings({ data: { password: pw, ...v } }); toast.success("Settings saved"); qc.invalidateQueries({ queryKey: ["adm"] }); qc.invalidateQueries({ queryKey: ["site-settings"] }); } catch (x) { err(x); }
       setBusy(false);
     }}>
+      <section className="space-y-3 border-b border-border pb-5 lg:col-span-2">
+        <h2 className="font-semibold">Website name</h2>
+        <Input aria-label="Website name" required maxLength={80} value={v.site_name} onChange={(e) => setV({ ...v, site_name: e.target.value })} />
+      </section>
+      <section className="space-y-3 border-b border-border pb-5 lg:col-span-2">
+        <label className="flex items-center justify-between gap-3 font-semibold" htmlFor="announcement-enabled">Announcement <Switch id="announcement-enabled" checked={v.announcement_enabled} onCheckedChange={(enabled) => setV({ ...v, announcement_enabled: enabled })} /></label>
+        <Input aria-label="Announcement title" placeholder="Title (optional)" maxLength={120} value={v.announcement_title} onChange={(e) => setV({ ...v, announcement_title: e.target.value })} />
+        <Textarea aria-label="Announcement message" placeholder="Announcement message" required={v.announcement_enabled} maxLength={2000} rows={4} value={v.announcement_message} onChange={(e) => setV({ ...v, announcement_message: e.target.value })} />
+      </section>
       <section className={cn("surface space-y-3 p-5", v.maintenance_mode && "ring-2 ring-warning")}>
         <label className="flex items-center justify-between font-semibold">Maintenance mode <Switch checked={v.maintenance_mode} onCheckedChange={(c) => setV({ ...v, maintenance_mode: c })} /></label>
         <p className="text-xs text-muted-foreground">When on, visitors only see a maintenance screen. The admin panel keeps working.</p>
@@ -545,7 +562,7 @@ function SettingsTab({ pw }: { pw: string }) {
         <Input placeholder="https://t.me/yoursupport" value={v.support_link} onChange={(e) => setV({ ...v, support_link: e.target.value })} />
         <p className="text-xs text-muted-foreground">Used by "Contact support" buttons on profile, wallet and maintenance screens.</p>
       </section>
-      <Button variant="hero" className="lg:col-span-2" disabled={busy}>Save settings</Button>
+      <Button variant="hero" className="lg:col-span-2" disabled={busy}>{busy ? <HackerLoader compact label="Saving settings" /> : "Save settings"}</Button>
     </form>
   );
 }

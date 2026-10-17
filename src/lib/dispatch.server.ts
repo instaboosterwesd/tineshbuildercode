@@ -1,4 +1,4 @@
-import { signPath, type Db } from "@/lib/server-helpers";
+import { signPath } from "@/lib/server-helpers";
 
 function config() {
   const token = process.env["GITHUB_FINE_GRAINED_PERSONAL_ACCESS_TOKEN"] || process.env["GITHUB_TOKEN"];
@@ -29,7 +29,12 @@ async function dispatch(event_type: string, client_payload: Record<string, unkno
   });
 }
 
-export async function dispatchBuild(db: Db, req: { id: string; app_name: string; package_name: string; app_id?: string | null }) {
+async function updateBuild(id: string, patch: Record<string, unknown>) {
+  const { dbUpdate } = await import("@/integrations/firebase/admin.server");
+  await dbUpdate(`buildRequests/${id}`, { ...patch, updated_at: new Date().toISOString() });
+}
+
+export async function dispatchBuild(req: { id: string; app_name: string; package_name: string; app_id?: string | null }) {
   const { token, secret, repo } = config();
   const url = await builderUrl();
   let status = "approved";
@@ -53,14 +58,14 @@ export async function dispatchBuild(db: Db, req: { id: string; app_name: string;
       log = `Build dispatch failed [${res.status}]: ${(await res.text()).slice(0, 300)}`;
     }
   }
-  await db.from("build_requests").update({ status, build_log: log, updated_at: new Date().toISOString() }).eq("id", req.id);
+  await updateBuild(req.id, { status, build_log: log });
   return { status, github, log };
 }
 
-export async function dispatchEncrypt(db: Db, req: { id: string; app_name: string; apk_path: string }) {
+export async function dispatchEncrypt(req: { id: string; app_name: string; apk_path: string }) {
   const { token, secret, repo } = config();
   const url = await builderUrl();
-  const apkUrl = await signPath(db, req.apk_path);
+  const apkUrl = await signPath(req.apk_path);
   let encrypt_status = "idle";
   let encrypt_log = "Build server is not configured yet.";
   let github = false;
@@ -75,6 +80,6 @@ export async function dispatchEncrypt(db: Db, req: { id: string; app_name: strin
       encrypt_log = `Dispatch failed [${res.status}]: ${(await res.text()).slice(0, 300)}`;
     }
   }
-  await db.from("build_requests").update({ encrypt_status, encrypt_log, updated_at: new Date().toISOString() }).eq("id", req.id);
+  await updateBuild(req.id, { encrypt_status, encrypt_log });
   return { encrypt_status, github, encrypt_log };
 }

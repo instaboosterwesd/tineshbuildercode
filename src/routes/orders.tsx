@@ -6,13 +6,16 @@ import { AppShell, PageHeader, RequireAuth } from "@/components/AppShell";
 import { myBuilds } from "@/lib/builder.functions";
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/StatusBadge";
+import { QueryFeedback } from "@/components/QueryFeedback";
+import { withRequestTimeout } from "@/lib/request-timeout";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/orders")({
   head: () => ({
     meta: [
-      { title: "My Orders — Builder" },
+      { title: "My Orders — AppForge" },
       { name: "description", content: "Track your app builds and download finished APKs." },
-      { property: "og:title", content: "My Orders — Builder" },
+      { property: "og:title", content: "My Orders — AppForge" },
       { property: "og:description", content: "Track your app builds and download finished APKs." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -31,9 +34,10 @@ export const Route = createFileRoute("/orders")({
 });
 
 function Orders() {
+  const { user } = useAuth();
   const fetchBuilds = useServerFn(myBuilds);
-  const { data } = useQuery({ queryKey: ["my-builds"], queryFn: () => fetchBuilds(), refetchInterval: 15000 });
-  if (!data) return <div className="grid h-64 place-items-center text-sm text-muted-foreground">Loading…</div>;
+  const { data, isError, refetch } = useQuery({ queryKey: ["my-builds", user?.uid], queryFn: () => withRequestTimeout(() => fetchBuilds()), refetchInterval: 15000, retry: false });
+  if (!data) return <QueryFeedback label="your orders" failed={isError} retry={() => refetch()} />;
   if (!data.length)
     return (
       <div className="surface clay p-10 text-center">

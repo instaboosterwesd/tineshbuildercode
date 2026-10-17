@@ -11,14 +11,18 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { requestDeposit } from "@/lib/wallet.functions";
+import { HackerLoader } from "@/components/effects/HackerLoader";
+import { QueryFeedback } from "@/components/QueryFeedback";
 
 export const Route = createFileRoute("/wallet")({
   head: () => ({
     meta: [
-      { title: "My Wallet — Builder" },
+      { title: "My Wallet — AppForge" },
       { name: "description", content: "Add balance to your wallet and see your payment history." },
-      { property: "og:title", content: "My Wallet — Builder" },
+      { property: "og:title", content: "My Wallet — AppForge" },
       { property: "og:description", content: "Add balance to your wallet and see your payment history." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary" },
       { name: "robots", content: "noindex" },
     ],
   }),
@@ -39,18 +43,18 @@ const STATUS: Record<string, { label: string; Icon: typeof Clock; cls: string }>
 };
 
 function WalletPage() {
-  const { data } = useWallet();
+  const { data, isError, refetch } = useWallet();
   const [open, setOpen] = useState(false);
-  if (!data) return <div className="h-40 animate-pulse rounded-3xl bg-muted" />;
+  if (!data) return <QueryFeedback label="your wallet" failed={isError} retry={() => refetch()} />;
   return (
     <>
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-card p-6 text-primary-foreground shadow-glow">
+      <div className="surface relative overflow-hidden p-6 text-foreground">
         <p className="text-sm opacity-80">Available balance</p>
-        <p className="mt-1 font-display text-4xl font-bold">₹{data.balance}</p>
+        <p className="mt-1 font-display text-4xl font-bold text-primary">₹{data.balance}</p>
         <div className="mt-5 flex gap-2">
-          <Button variant="secondary" onClick={() => setOpen(true)}><Plus className="size-4" /> Add balance</Button>
+          <Button variant="hero" onClick={() => setOpen(true)}><Plus className="size-4" /> Add balance</Button>
           {data.support_link && (
-            <Button variant="ghost" className="text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground" asChild>
+            <Button variant="ghost" asChild>
               <a href={data.support_link} target="_blank" rel="noreferrer"><LifeBuoy className="size-4" /> Help</a>
             </Button>
           )}
@@ -113,7 +117,7 @@ function DepositDialog({ open, onOpenChange, upi, min }: { open: boolean; onOpen
   const [amount, setAmount] = useState("");
   const [utr, setUtr] = useState("");
   const [loading, setLoading] = useState(false);
-  const upiUrl = `upi://pay?pa=${encodeURIComponent(upi)}&pn=Builder&am=${amount}&cu=INR`;
+  const upiUrl = `upi://pay?pa=${encodeURIComponent(upi)}&pn=AppForge&am=${amount}&cu=INR`;
 
   function close(o: boolean) {
     onOpenChange(o);
@@ -175,7 +179,7 @@ function DepositDialog({ open, onOpenChange, upi, min }: { open: boolean; onOpen
             <div className="space-y-1.5"><Label htmlFor="utr">UTR / Transaction ID</Label><Input id="utr" required value={utr} onChange={(e) => setUtr(e.target.value)} maxLength={64} placeholder="12-digit UTR" autoFocus /></div>
             <div className="flex gap-2">
               <Button type="button" variant="outline" className="flex-1" onClick={() => setStep("pay")}>Back</Button>
-              <Button type="submit" variant="hero" className="flex-1" disabled={loading}>{loading ? "Submitting…" : "Submit"}</Button>
+              <Button type="submit" variant="hero" className="flex-1" disabled={loading}>{loading ? <HackerLoader compact label="Submitting payment" /> : "Submit"}</Button>
             </div>
           </form>
         )}

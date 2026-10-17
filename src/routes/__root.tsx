@@ -13,8 +13,11 @@ import { useEffect, type ReactNode } from "react";
 import { Wrench, LifeBuoy } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ProfileCompletion } from "@/components/ProfileCompletion";
+import { UserTour } from "@/components/UserTour";
 import { themeInitScript } from "@/lib/theme";
-import { getSiteSettings } from "@/lib/wallet.functions";
+import { siteSettingsQuery } from "@/hooks/useSiteSettings";
+import { SiteAnnouncement } from "@/components/SiteAnnouncement";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -71,16 +74,16 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
-      { title: "Builder — Turn templates into Android apps" },
+      { title: "AppForge — Turn templates into Android apps" },
       { name: "description", content: "Pick a template, add your logo and get your own Android APK in minutes." },
-      { property: "og:title", content: "Builder — Turn templates into Android apps" },
+      { property: "og:title", content: "AppForge — Turn templates into Android apps" },
       { property: "og:description", content: "Pick a template, add your logo and get your own Android APK in minutes." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "data:," },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" },
@@ -107,12 +110,13 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
-export const siteSettingsQuery = { queryKey: ["site-settings"], queryFn: () => getSiteSettings(), staleTime: 30_000 };
+export { siteSettingsQuery } from "@/hooks/useSiteSettings";
 
 function MaintenanceGate({ children }: { children: ReactNode }) {
   const { pathname } = useLocation();
   const { data } = useQuery(siteSettingsQuery);
-  if (pathname.startsWith("/admin") || !data?.maintenance_mode) return <>{children}</>;
+  if (pathname.startsWith("/admin")) return <>{children}</>;
+  if (!data?.maintenance_mode) return <><SiteAnnouncement />{children}</>;
   return (
     <div className="grid min-h-screen place-items-center bg-background px-6">
       <div className="max-w-sm text-center">
@@ -139,6 +143,8 @@ function RootComponent() {
         <MaintenanceGate>
           <Outlet />
         </MaintenanceGate>
+        <ProfileCompletion />
+        <UserTour />
         <Toaster richColors position="top-center" />
       </AuthProvider>
     </QueryClientProvider>

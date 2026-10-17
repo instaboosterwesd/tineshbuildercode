@@ -8,19 +8,24 @@ import { AppShell, PageHeader, RequireAuth, useWallet } from "@/components/AppSh
 import { getMyProfile, updateMyProfile, uploadAvatar } from "@/lib/users.functions";
 import { myBuilds } from "@/lib/builder.functions";
 import { getSiteSettings } from "@/lib/wallet.functions";
-import { supabase } from "@/integrations/supabase/client";
+import { signOut, updatePassword } from "firebase/auth";
+import { fbAuth } from "@/integrations/firebase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { StatusBadge } from "@/components/StatusBadge";
+import { HackerLoader } from "@/components/effects/HackerLoader";
+import { QueryFeedback } from "@/components/QueryFeedback";
+import { withRequestTimeout } from "@/lib/request-timeout";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/profile")({
   head: () => ({
     meta: [
-      { title: "My Profile — Builder" },
+      { title: "My Profile — AppForge" },
       { name: "description", content: "Edit your profile, photo and password, and see your recent builds and logins." },
-      { property: "og:title", content: "My Profile — Builder" },
-      { property: "og:description", content: "Manage your Builder account." },
+      { property: "og:title", content: "My Profile — AppForge" },
+      { property: "og:description", content: "Manage your AppForge account." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -47,6 +52,7 @@ function device(ua: string) {
 }
 
 function ProfileBody() {
+  const { user } = useAuth();
   const qc = useQueryClient();
   const navigate = useNavigate();
   const fetchProfile = useServerFn(getMyProfile);
@@ -54,8 +60,10 @@ function ProfileBody() {
   const save = useServerFn(updateMyProfile);
   const upload = useServerFn(uploadAvatar);
   const { data: wallet } = useWallet();
-  const { data } = useQuery({ queryKey: ["my-profile"], queryFn: () => fetchProfile() });
-  const { data: builds } = useQuery({ queryKey: ["my-builds"], queryFn: () => fetchBuilds() });
+  const profileQuery = useQuery({ queryKey: ["my-profile", user?.uid], queryFn: () => withRequestTimeout(() => fetchProfile()), retry: false, staleTime: 30_000 });
+  const { data } = profileQuery;
+  const buildsQuery = useQuery({ queryKey: ["my-builds", user?.uid], queryFn: () => withRequestTimeout(() => fetchBuilds()), retry: false });
+  const { data: builds } = buildsQuery;
   const { data: settings } = useQuery({ queryKey: ["site-settings"], queryFn: () => getSiteSettings() });
 
   const [name, setName] = useState("");
@@ -69,12 +77,12 @@ function ProfileBody() {
 
   useEffect(() => {
     if (data?.profile) {
-      setName(data.profile.name);
-      setTelegram(data.profile.telegram_id);
+      setName(data.profile.name ?? "");
+      setTelegram(data.profile.telegram_id ?? "");
     }
   }, [data?.profile]);
 
-  if (!data) return <div className="grid h-64 place-items-center text-sm text-muted-foreground">Loading…</div>;
+  if (!data) return <QueryFeedback label="your profile" failed={profileQuery.isError} retry={() => profileQuery.refetch()} />;
   const p = data.profile;
 
   async function onSave() {
@@ -118,9 +126,16 @@ function ProfileBody() {
     if (pw.length < 6) return toast.error("Password must be at least 6 characters");
     if (pw !== pw2) return toast.error("Passwords do not match");
     setPwBusy(true);
-    const { error } = await supabase.auth.updateUser({ password: pw });
+    try {
+      const u = fbAuth().currentUser;
+      if (!u) throw new Error("Not signed in");
+      await updatePassword(u, pw);
+    } catch (err) {
+      setPwBusy(false);
+      const code = (err as { code?: string })?.code ?? "";
+      return toast.error(code.includes("requires-recent-login") ? "Please log out and log in again, then retry" : "Could not change password");
+    }
     setPwBusy(false);
-    if (error) return toast.error(error.message);
     setPw("");
     setPw2("");
     toast.success("Password changed");
@@ -130,7 +145,7 @@ function ProfileBody() {
   async function onLogout() {
     await qc.cancelQueries();
     qc.clear();
-    await supabase.auth.signOut();
+    await signOut(fbAuth());
     navigate({ to: "/auth", replace: true });
   }
 
@@ -138,7 +153,7 @@ function ProfileBody() {
 
   return (
     <div className="space-y-5">
-      <section className="surface clay flex flex-col items-center gap-4 p-6 text-center sm:flex-row sm:text-left">
+      <section className="surface flex flex-col items-center gap-4 p-6 text-center sm:flex-row sm:text-left">
         <button
           type="button"
           onClick={() => fileRef.current?.click()}
@@ -153,7 +168,7 @@ function ProfileBody() {
           <span className="absolute inset-0 grid place-items-center bg-foreground/40 text-background opacity-0 transition group-hover:opacity-100">
             <Camera className="size-6" />
           </span>
-          {uploading && <span className="absolute inset-0 grid place-items-center bg-foreground/50 text-xs text-background">Uploading…</span>}
+          {uploading && <span className="absolute inset-0 grid place-items-center bg-foreground/50 text-xs text-background"><HackerLoader compact label="Uploading photo" className="text-xs" /></span>}
         </button>
         <input ref={fileRef} type="file" accept="image/*" hidden onChange={(e) => onPhoto(e.target.files?.[0])} />
         <div className="min-w-0 flex-1">
@@ -175,7 +190,7 @@ function ProfileBody() {
         </div>
       </section>
 
-      <section className="surface clay space-y-4 p-5">
+      <section className="surface space-y-4 p-5">
         <h3 className="font-semibold">Edit profile</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
@@ -188,27 +203,27 @@ function ProfileBody() {
           </div>
         </div>
         <Button variant="hero" onClick={onSave} disabled={saving || !name.trim()}>
-          <Save className="size-4" /> {saving ? "Saving…" : "Save changes"}
+          {saving ? <HackerLoader compact label="Saving changes" /> : <><Save className="size-4" /> Save changes</>}
         </Button>
       </section>
 
-      <section className="surface clay space-y-4 p-5">
+      <section className="surface space-y-4 p-5">
         <h3 className="flex items-center gap-2 font-semibold"><KeyRound className="size-4" /> Change password</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <Input type="password" placeholder="New password" value={pw} onChange={(e) => setPw(e.target.value)} />
           <Input type="password" placeholder="Confirm new password" value={pw2} onChange={(e) => setPw2(e.target.value)} />
         </div>
         <Button variant="secondary" onClick={onPassword} disabled={pwBusy || !pw}>
-          {pwBusy ? "Updating…" : "Update password"}
+          {pwBusy ? <HackerLoader compact label="Updating password" /> : "Update password"}
         </Button>
       </section>
 
-      <section className="surface clay space-y-3 p-5">
+      <section className="surface space-y-3 p-5">
         <div className="flex items-center justify-between">
           <h3 className="font-semibold">Recent builds</h3>
           <Link to="/orders" className="text-sm font-medium text-primary">View all</Link>
         </div>
-        {!builds?.length && <p className="text-sm text-muted-foreground">No builds yet.</p>}
+        {!builds ? <QueryFeedback label="recent builds" failed={buildsQuery.isError} retry={() => buildsQuery.refetch()} /> : !builds.length && <p className="text-sm text-muted-foreground">No builds yet.</p>}
         {builds?.slice(0, 5).map((b) => (
           <div key={b.id} className="clay-inset flex items-center justify-between gap-3 rounded-2xl px-4 py-3">
             <div className="min-w-0">
@@ -220,7 +235,7 @@ function ProfileBody() {
         ))}
       </section>
 
-      <section className="surface clay space-y-3 p-5">
+      <section className="surface space-y-3 p-5">
         <h3 className="font-semibold">Login history</h3>
         {!data.logins.length && <p className="text-sm text-muted-foreground">No logins recorded yet.</p>}
         {data.logins.map((l) => (

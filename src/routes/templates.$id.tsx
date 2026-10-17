@@ -9,11 +9,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { createLogoUploadUrl, getTemplate, userBuild } from "@/lib/builder.functions";
+import { uploadLogo, getTemplate, userBuild } from "@/lib/builder.functions";
 import { baseApkLabel } from "@/lib/base-apks";
 import { productId } from "@/lib/product-id";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import { HackerLoader } from "@/components/effects/HackerLoader";
 
 const templateQuery = (id: string) => queryOptions({ queryKey: ["template", id], queryFn: () => getTemplate({ data: { id } }) });
 
@@ -26,10 +26,12 @@ export const Route = createFileRoute("/templates/$id")({
   head: ({ loaderData }) => ({
     meta: loaderData
       ? [
-          { title: `${loaderData.name} — Builder template` },
+          { title: `${loaderData.name} — AppForge template` },
           { name: "description", content: loaderData.description || `Preview ${loaderData.name} and build your APK.` },
-          { property: "og:title", content: `${loaderData.name} — Builder template` },
+          { property: "og:title", content: `${loaderData.name} — AppForge template` },
           { property: "og:description", content: loaderData.description || `Preview ${loaderData.name} and build your APK.` },
+          { property: "og:type", content: "website" },
+          { name: "twitter:card", content: "summary" },
         ]
       : [{ title: "Template not found" }, { name: "robots", content: "noindex" }],
   }),
@@ -115,7 +117,6 @@ function BuildDialog({ open, onOpenChange, template }: { open: boolean; onOpenCh
   const qc = useQueryClient();
   const [step, setStep] = useState<Step>("details");
   const [appName, setAppName] = useState("");
-  const [pkg, setPkg] = useState("");
   const [extra, setExtra] = useState("");
   const [logo, setLogo] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -132,12 +133,16 @@ function BuildDialog({ open, onOpenChange, template }: { open: boolean; onOpenCh
     if (!logo) { toast.error("Choose a logo"); return; }
     setLoading(true);
     try {
-      const { path, token } = await createLogoUploadUrl({ data: { filename: logo.name } });
-      const { error } = await supabase.storage.from("media").uploadToSignedUrl(path, token, logo, { contentType: logo.type });
-      if (error) throw new Error(error.message);
+      const image = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => typeof reader.result === "string" ? resolve(reader.result) : reject(new Error("Could not read logo"));
+        reader.onerror = () => reject(new Error("Could not read logo"));
+        reader.readAsDataURL(logo);
+      });
+      const { path } = await uploadLogo({ data: { filename: logo.name, image } });
       await userBuild({
         data: {
-          template_id: template.id, app_name: appName, package_name: pkg, logo_path: path,
+          template_id: template.id, app_name: appName, logo_path: path,
           app_id: isTeacher ? extra : "", register_link: isTeacher ? "" : extra,
         },
       });
@@ -156,7 +161,7 @@ function BuildDialog({ open, onOpenChange, template }: { open: boolean; onOpenCh
   }
 
   return (
-    <Dialog open={open} onOpenChange={close}>
+    <Dialog open={open} onOpenChange={(value) => { if (!loading) close(value); }}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Build “{template.name}”</DialogTitle>
@@ -183,7 +188,7 @@ function BuildDialog({ open, onOpenChange, template }: { open: boolean; onOpenCh
                 <div className="space-y-1.5"><Label htmlFor="app">App name</Label><Input id="app" value={appName} onChange={(e) => setAppName(e.target.value)} required maxLength={60} placeholder="My App" /></div>
                 <div className="space-y-1.5">
                   <Label htmlFor="pkg">Package name</Label>
-                  <Input id="pkg" value={pkg} onChange={(e) => setPkg(e.target.value)} required placeholder="com.myapp.android" pattern="[a-zA-Z][\w]*(\.[a-zA-Z][\w]*)+" title="Like com.company.app" />
+                  <Input id="pkg" value="Auto-assigned on build" readOnly className="font-mono" />
                 </div>
                 <Button type="submit" variant="hero">Next</Button>
               </form>
@@ -211,7 +216,7 @@ function BuildDialog({ open, onOpenChange, template }: { open: boolean; onOpenCh
                 <div className="flex gap-2">
                   <Button type="button" variant="outline" className="flex-1" onClick={() => setStep("extra")}>Back</Button>
                   <Button variant="hero" className="flex-1" disabled={loading || !logo} onClick={build}>
-                    <Hammer className="size-4" /> {loading ? "Building…" : template.price > 0 ? `Build — ₹${template.price}` : "Build"}
+                    {loading ? <HackerLoader compact label="Building your app" /> : <><Hammer className="size-4" />{template.price > 0 ? `Build — ₹${template.price}` : "Build"}</>}
                   </Button>
                 </div>
               </div>

@@ -1,20 +1,28 @@
 import { Link, useNavigate, useMatchRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Hammer, Home, Trophy, User, Wallet, Moon, Sun, LogIn, Package } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Home, Trophy, User, Wallet, Moon, Sun, LogIn, Package } from "lucide-react";
+import logoImg from "@/assets/logo.png";
 import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/lib/theme";
 import { getWalletInfo } from "@/lib/wallet.functions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { withRequestTimeout } from "@/lib/request-timeout";
+import { useSiteName } from "@/hooks/useSiteSettings";
+import { LoadingPanel } from "@/components/effects/HackerLoader";
+import { LottieIcon } from "@/components/effects/LottieIcon";
+import star from "@/assets/emoji-star.json.asset.json";
+import verified from "@/assets/emoji-verified.json.asset.json";
+import { UserBackground } from "@/components/effects/UserBackground";
 
 export function Logo({ to = "/" }: { to?: "/" }) {
+  const name = useSiteName();
   return (
-    <Link to={to} className="flex items-center gap-2 font-display text-lg font-bold">
-      <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-gradient-primary shadow-glow">
-        <Hammer className="size-4 text-primary-foreground" />
-      </span>
-      Builder
+    <Link to={to} className="flex min-w-0 items-center gap-2 font-display text-lg font-bold">
+      <img src={logoImg} alt={`${name} logo`} width={32} height={32} className="size-8 shrink-0 shadow-glow rounded-xl" />
+      <span className="line-clamp-2 break-words text-sm leading-tight sm:text-lg">{name}</span>
     </Link>
   );
 }
@@ -38,7 +46,8 @@ export const walletQuery = { queryKey: ["wallet"], queryFn: () => getWalletInfo(
 
 export function useWallet() {
   const { user } = useAuth();
-  return useQuery({ ...walletQuery, enabled: !!user });
+  const fetchWallet = useServerFn(getWalletInfo);
+  return useQuery({ queryKey: [...walletQuery.queryKey, user?.uid], queryFn: () => withRequestTimeout(() => fetchWallet()), enabled: !!user, retry: false, staleTime: 30_000 });
 }
 
 const NAV = [
@@ -61,11 +70,8 @@ function DockLink({ to, label, Icon }: (typeof NAV)[number]) {
       aria-label={label}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex shrink-0 items-center gap-2 rounded-full px-3 py-2.5 text-sm font-semibold transition-all duration-300 ease-out",
-        "hover:-translate-y-1 active:translate-y-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-        active
-          ? "bg-primary text-primary-foreground clay-btn shadow-glow"
-          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+        "group flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-md px-2 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        active ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
       )}
     >
       <Icon
@@ -76,8 +82,7 @@ function DockLink({ to, label, Icon }: (typeof NAV)[number]) {
       />
       <span
         className={cn(
-          "overflow-hidden whitespace-nowrap transition-all duration-300 max-sm:hidden",
-          active ? "max-w-24 opacity-100" : "max-w-0 opacity-0 group-hover:max-w-24 group-hover:opacity-100",
+          "whitespace-nowrap text-[10px] sm:text-xs",
         )}
       >
         {label}
@@ -92,12 +97,12 @@ function CapsuleDock() {
       aria-label="Main navigation"
       className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-3 pb-safe"
     >
-      <div className="capsule-dock dock-in flex max-w-[calc(100vw-1.5rem)] items-center gap-1 border border-border/60 p-1.5">
+      <div className="capsule-dock dock-in flex w-full max-w-lg items-center gap-1 border border-border/60 p-1.5">
         {NAV.map((item) => (
           <DockLink key={item.to} {...item} />
         ))}
         <span aria-hidden className="mx-1 h-6 w-px shrink-0 bg-border" />
-        <ThemeToggle className="size-9 shrink-0 hover:-translate-y-1" />
+        <ThemeToggle className="size-9 shrink-0 hover:bg-accent" />
       </div>
     </nav>
   );
@@ -107,17 +112,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { data: wallet } = useWallet();
   return (
-    <div className="min-h-screen pb-28">
-      <header className="sticky top-0 z-40 bg-background/70 backdrop-blur-lg">
+    <div className="user-shell min-h-screen pb-28">
+      <UserBackground />
+      <header className="sticky top-0 z-40 border-b border-glass-border glass-panel">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:h-16">
           <Logo />
           <div className="ml-auto flex items-center gap-2">
             {user ? (
               <Link
                 to="/wallet"
-                className="flex items-center gap-1.5 rounded-full bg-card clay px-3.5 py-2 text-sm font-semibold transition hover:-translate-y-0.5"
+                className="flex items-center gap-1.5 rounded-full border glass-panel px-3.5 py-2 text-sm font-semibold transition hover:-translate-y-0.5"
               >
-                <Wallet className="size-4 text-primary" /> ₹{wallet?.balance ?? 0}
+                <Wallet className="size-4 text-primary" /> {wallet ? `₹${wallet.balance}` : "—"}
               </Link>
             ) : (
               <Button asChild size="sm" variant="hero" className="rounded-full">
@@ -139,7 +145,7 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
   return (
     <div className="mb-5 flex items-end justify-between gap-3">
       <div>
-        <h1 className="text-2xl font-bold sm:text-3xl">{title}</h1>
+        <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl">{title}{title === "Profile" ? <LottieIcon src={verified.url} className="size-7" /> : title === "Leaderboard" ? <LottieIcon src={star.url} className="size-7" /> : null}</h1>
         {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
       </div>
       {action}
@@ -153,7 +159,7 @@ export function RequireAuth({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!loading && !user) navigate({ to: "/auth", replace: true });
   }, [loading, user, navigate]);
-  if (loading) return <div className="grid h-64 place-items-center text-sm text-muted-foreground">Loading…</div>;
+  if (loading) return <LoadingPanel />;
   if (!user) {
     return (
       <div className="surface mx-auto mt-6 max-w-sm p-8 text-center">

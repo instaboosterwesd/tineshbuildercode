@@ -1,12 +1,6 @@
-// Shared validation helpers for server functions. No server-only imports at
-// module top level: this file is pulled into the client graph by *.functions.ts.
-
-export async function adminDb() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return supabaseAdmin;
-}
-
-export type Db = Awaited<ReturnType<typeof adminDb>>;
+// Shared validation + Firebase helpers for server functions. No server-only
+// imports at module top level: this file is pulled into the client graph by
+// *.functions.ts.
 
 export function checkPassword(password: unknown) {
   const expected = process.env["ADMIN_PASSWORD"] || "devdev";
@@ -30,31 +24,39 @@ export function int(v: unknown, field: string, min: number, max: number): number
 
 export function uuid(v: unknown, field = "id"): string {
   const s = typeof v === "string" ? v : "";
-  if (!/^[0-9a-f-]{36}$/i.test(s)) throw new Error(`Invalid ${field}`);
+  if (!/^[\w-]{6,64}$/.test(s)) throw new Error(`Invalid ${field}`);
   return s;
 }
 
 export const PACKAGE_RE = /^[a-zA-Z][\w]*(\.[a-zA-Z][\w]*)+$/;
 export const APP_ID_RE = /^[A-Za-z0-9_-]+$/;
 export const LOGO_RE = /^logos\/[0-9a-f-]{36}\.[a-z0-9]{1,8}$/i;
-export const BUCKET = "media";
-
-export async function signPath(db: Db, path: string | null | undefined, download?: string) {
-  if (!path) return null;
-  const { data } = await db.storage.from(BUCKET).createSignedUrl(path, 60 * 60 * 24, download ? { download } : undefined);
-  return data?.signedUrl ?? null;
-}
 
 export function apkName(app: string) {
   return (app.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "_") || "app") + ".apk";
 }
 
-/** Atomically add (positive) or remove (negative) wallet balance. Throws INSUFFICIENT_BALANCE. */
-export async function walletChange(db: Db, userId: string, amount: number, kind: string, note: string) {
-  const { data, error } = await db.rpc("wallet_change", { _user: userId, _amount: amount, _kind: kind, _note: note });
-  if (error) {
-    if (error.message.includes("INSUFFICIENT_BALANCE")) throw new Error("INSUFFICIENT_BALANCE");
-    throw new Error(error.message);
+/** Signed download URL for a storage path (null-safe). */
+export async function signPath(path: string | null | undefined, download?: string): Promise<string | null> {
+  if (!path) return null;
+  const { storageSignUrl, dbGet } = await import("@/integrations/firebase/admin.server");
+  if (LOGO_RE.test(path)) {
+    const media = await dbGet<{ url: string }>(`mediaFiles/${path.replace(/\./g, "_")}`);
+    if (media?.url && /^https:\/\/i\.ibb\.co\//.test(media.url)) return media.url;
   }
-  return data as number;
+  return storageSignUrl(path, 60 * 60 * 24, download);
+}
+
+/** Atomically add (positive) or remove (negative) wallet balance. Throws INSUFFICIENT_BALANCE. */
+export async function walletChange(userId: string, amount: number, kind: string, note: string): Promise<number> {
+  const { dbGet, dbPush, dbTransactNumber } = await import("@/integrations/firebase/admin.server");
+  const current = (await dbGet<number>(`wallets/${userId}/balance`)) ?? 0;
+  if (current + amount < 0) throw new Error("INSUFFICIENT_BALANCE");
+  const next = await dbTransactNumber(`wallets/${userId}/balance`, amount);
+  if (next < 0) {
+    await dbTransactNumber(`wallets/${userId}/balance`, -amount);
+    throw new Error("INSUFFICIENT_BALANCE");
+  }
+  await dbPush(`walletTransactions/${userId}`, { amount, kind, note, created_at: new Date().toISOString() });
+  return next;
 }
