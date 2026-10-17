@@ -21,3 +21,6 @@
 - Use shared HackerLoader/LoadingPanel for loading feedback, with scoped timers and reduced-motion support; consistent states must not block navigation or alter unrelated text.
 - Choose new build package names server-side using the shared package-name module; ignore client package overrides and retain stored names for retries.
 - IconScout calls go through the server-only searchIconscout proxy (src/lib/iconscout.functions.ts) reading ICONSCOUT_CLIENT_ID/SECRET; the client secret must never reach the browser. Loading UI uses shared HackerLoader/BrandLoader/SkeletonGrid/DetailSkeleton and SmartImage so states stay consistent.
+
+- Media pointers (/__l5e/...) are proxied in src/server.ts to the Lovable project host when the app runs off Lovable hosting (Vercel); without it all images/videos 404 there.
+- Base-app behaviour (App ID vs register link, which asset receives template HTML) is config-driven: base-apks.ts flags in this app and bases/<id>.json html_targets in the apk-builder repo.
