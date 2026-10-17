@@ -1,7 +1,7 @@
 import { Link, useNavigate, useMatchRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Hammer, Home, Trophy, User, Wallet, Moon, Sun, LogIn, Package } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/lib/theme";
 import { getWalletInfo } from "@/lib/wallet.functions";
@@ -51,10 +51,12 @@ const NAV = [
 
 function DockLink({ to, label, Icon }: (typeof NAV)[number]) {
   const matchRoute = useMatchRoute();
+  const { user } = useAuth();
   const active = matchRoute({ to });
+  const dest = user || to === "/" ? to : "/auth";
   return (
     <Link
-      to={to}
+      to={dest}
       title={label}
       aria-label={label}
       aria-current={active ? "page" : undefined}
@@ -148,6 +150,9 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
 export function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
+  useEffect(() => {
+    if (!loading && !user) navigate({ to: "/auth", replace: true });
+  }, [loading, user, navigate]);
   if (loading) return <div className="grid h-64 place-items-center text-sm text-muted-foreground">Loading…</div>;
   if (!user) {
     return (
