@@ -26,7 +26,7 @@ export const Route = createFileRoute("/leaderboard")({
   ),
 });
 
-const medal = ["bg-warning text-warning-foreground", "bg-muted-foreground/30", "bg-primary/30"];
+const medal = ["bg-warning/30 text-warning", "bg-muted-foreground/30", "bg-primary/30"];
 
 function Board() {
   const { data } = useQuery({ queryKey: ["leaderboard"], queryFn: () => leaderboard() });

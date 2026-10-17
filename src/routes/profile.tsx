@@ -91,7 +91,7 @@ function ProfileBody() {
   }
 
   async function onPhoto(file?: File) {
-    if (!file) return;
+    if (!file) return undefined;
     if (!file.type.startsWith("image/")) return toast.error("Please choose an image");
     if (file.size > 3 * 1024 * 1024) return toast.error("Image must be under 3 MB");
     setUploading(true);
@@ -111,6 +111,7 @@ function ProfileBody() {
       setUploading(false);
       if (fileRef.current) fileRef.current.value = "";
     }
+    return undefined;
   }
 
   async function onPassword() {
@@ -123,6 +124,7 @@ function ProfileBody() {
     setPw("");
     setPw2("");
     toast.success("Password changed");
+    return undefined;
   }
 
   async function onLogout() {
