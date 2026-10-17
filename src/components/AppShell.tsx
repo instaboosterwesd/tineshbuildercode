@@ -1,7 +1,7 @@
 import { Link, useNavigate, useMatchRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Home, Trophy, User, Wallet, Moon, Sun, LogIn, Package } from "lucide-react";
+import { Wallet, Moon, Sun, LogIn } from "lucide-react";
 import logoImg from "@/assets/logo.png";
 import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -15,6 +15,11 @@ import { LoadingPanel } from "@/components/effects/HackerLoader";
 import { LottieIcon } from "@/components/effects/LottieIcon";
 import star from "@/assets/emoji-star.json.asset.json";
 import verified from "@/assets/emoji-verified.json.asset.json";
+import emojiHome from "@/assets/emoji-home.json.asset.json";
+import emojiWallet from "@/assets/emoji-wallet.json.asset.json";
+import emojiOrders from "@/assets/emoji-orders.json.asset.json";
+import emojiLeaders from "@/assets/emoji-leaders.json.asset.json";
+import emojiProfile from "@/assets/emoji-profile.json.asset.json";
 import { UserBackground } from "@/components/effects/UserBackground";
 
 export function Logo({ to = "/" }: { to?: "/" }) {
@@ -51,14 +56,14 @@ export function useWallet() {
 }
 
 const NAV = [
-  { to: "/", label: "Home", Icon: Home },
-  { to: "/wallet", label: "Wallet", Icon: Wallet },
-  { to: "/orders", label: "Orders", Icon: Package },
-  { to: "/leaderboard", label: "Leaders", Icon: Trophy },
-  { to: "/profile", label: "Profile", Icon: User },
+  { to: "/", label: "Home", emoji: emojiHome.url },
+  { to: "/wallet", label: "Wallet", emoji: emojiWallet.url },
+  { to: "/orders", label: "Orders", emoji: emojiOrders.url },
+  { to: "/leaderboard", label: "Leaders", emoji: emojiLeaders.url },
+  { to: "/profile", label: "Profile", emoji: emojiProfile.url },
 ] as const;
 
-function DockLink({ to, label, Icon }: (typeof NAV)[number]) {
+function DockLink({ to, label, emoji }: (typeof NAV)[number]) {
   const matchRoute = useMatchRoute();
   const { user } = useAuth();
   const active = matchRoute({ to });
@@ -74,9 +79,10 @@ function DockLink({ to, label, Icon }: (typeof NAV)[number]) {
         active ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
       )}
     >
-      <Icon
+      <LottieIcon
+        src={emoji}
         className={cn(
-          "size-5 shrink-0 transition-transform duration-300 group-hover:scale-115",
+          "size-7 transition-transform duration-300 group-hover:scale-115",
           active && "scale-110",
         )}
       />

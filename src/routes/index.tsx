@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Image as ImageIcon, PlayCircle, Search, Smartphone, ShieldCheck, SearchX, Sparkles } from "lucide-react";
+import { Image as ImageIcon, PlayCircle, Search, SearchX, Sparkles } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
 import { BASE_APKS, baseApkLabel } from "@/lib/base-apks";
@@ -49,21 +49,7 @@ function Index() {
 
   return (
     <AppShell>
-      <section className="mx-auto max-w-6xl px-4 pt-8 text-center sm:pt-12">
-        <div className="mx-auto max-w-2xl">
-          <h1 className="text-3xl font-bold leading-tight sm:text-4xl">
-            Pick a template. <span className="text-gradient">Get your app.</span>
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Choose a design, pay from your wallet, and download your Android app.
-          </p>
-          <div className="mt-4 flex flex-wrap justify-center gap-2">
-            <span className="flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground"><Smartphone className="size-4 text-primary" /> Native Android APK</span>
-            <span className="flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground"><ShieldCheck className="size-4 text-primary" /> Pay from wallet</span>
-            <span className="flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1.5 text-xs font-semibold text-muted-foreground"><Sparkles className="size-4 text-primary" /> Ready in minutes</span>
-          </div>
-        </div>
-      </section>
+
 
       <section className="sticky top-14 z-30 mx-auto max-w-6xl px-4 py-3 sm:top-16">
         <div className="surface flex flex-col gap-2.5 p-3 backdrop-blur-xl sm:flex-row sm:items-center">

@@ -42,10 +42,16 @@ export type Template = Awaited<ReturnType<typeof signTemplates>>[number];
 /* ---------- Public ---------- */
 
 export const listTemplates = createServerFn({ method: "GET" }).handler(async () => {
-  const db = await adb();
-  const rec = await db.dbGet<Record<string, Omit<TemplateRow, "id">>>("templates");
-  const rows = keyed(rec).sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
-  return signTemplates(rows.map((r) => ({ ...r, html: "" })), false);
+  try {
+    const db = await adb();
+    const rec = await db.dbGet<Record<string, Omit<TemplateRow, "id">>>("templates");
+    const rows = keyed(rec).sort((a, b) => (b.created_at ?? "").localeCompare(a.created_at ?? ""));
+    return await signTemplates(rows.map((r) => ({ ...r, html: "" })), false);
+  } catch (e) {
+    // Public home page must still render when the backend key is missing/invalid.
+    console.error("listTemplates failed:", e instanceof Error ? e.message : e);
+    return [] as Awaited<ReturnType<typeof signTemplates>>;
+  }
 });
 
 export const getTemplate = createServerFn({ method: "GET" })

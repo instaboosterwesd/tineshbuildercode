@@ -1,6 +1,7 @@
 # Roadmap
 
 ## Current task
+- [x] Emoji1 animated emojis in navigation and login.
 - [ ] Apply uploaded hacker loader to page, skeleton and action loading; match hacker glass colors; remove splash cursor; stabilize navigation; add suitable animated emoji.
 - [ ] Randomize new APK packages from com.tineshmod.a1 to com.tineshmod.a10 and run rule tests.
 - [ ] Apply separate Google button artwork when supplied (waiting for asset).
