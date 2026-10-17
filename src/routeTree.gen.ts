@@ -10,11 +10,23 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as WalletRouteImport } from './routes/wallet'
+import { Route as TemplatesIdRouteImport } from './routes/templates.$id'
 import { Route as ApiPublicBuildRouteImport } from './routes/api/public/build'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const WalletRoute = WalletRouteImport.update({
+  id: '/wallet',
+  path: '/wallet',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TemplatesIdRoute = TemplatesIdRouteImport.update({
+  id: '/templates/$id',
+  path: '/templates/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicBuildRoute = ApiPublicBuildRouteImport.update({
@@ -25,27 +37,35 @@ const ApiPublicBuildRoute = ApiPublicBuildRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/wallet': typeof WalletRoute
+  '/templates/$id': typeof TemplatesIdRoute
   '/api/public/build': typeof ApiPublicBuildRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/wallet': typeof WalletRoute
+  '/templates/$id': typeof TemplatesIdRoute
   '/api/public/build': typeof ApiPublicBuildRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/wallet': typeof WalletRoute
+  '/templates/$id': typeof TemplatesIdRoute
   '/api/public/build': typeof ApiPublicBuildRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/public/build'
+  fullPaths: '/' | '/wallet' | '/templates/$id' | '/api/public/build'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/public/build'
-  id: '__root__' | '/' | '/api/public/build'
+  to: '/' | '/wallet' | '/templates/$id' | '/api/public/build'
+  id: '__root__' | '/' | '/wallet' | '/templates/$id' | '/api/public/build'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  WalletRoute: typeof WalletRoute
+  TemplatesIdRoute: typeof TemplatesIdRoute
   ApiPublicBuildRoute: typeof ApiPublicBuildRoute
 }
 
@@ -56,6 +76,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/wallet': {
+      id: '/wallet'
+      path: '/wallet'
+      fullPath: '/wallet'
+      preLoaderRoute: typeof WalletRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/templates/$id': {
+      id: '/templates/$id'
+      path: '/templates/$id'
+      fullPath: '/templates/$id'
+      preLoaderRoute: typeof TemplatesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/build': {
@@ -70,6 +104,8 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  WalletRoute: WalletRoute,
+  TemplatesIdRoute: TemplatesIdRoute,
   ApiPublicBuildRoute: ApiPublicBuildRoute,
 }
 export const routeTree = rootRouteImport
