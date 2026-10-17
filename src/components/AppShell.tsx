@@ -1,4 +1,4 @@
-import { Link, useNavigate, useMatchRoute } from "@tanstack/react-router";
+import { Link, useNavigate, useMatchRoute, useRouterState } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Moon, Sun, LogIn } from "lucide-react";
@@ -112,10 +112,12 @@ function CapsuleDock() {
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { data: wallet } = useWallet();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const showHeader = pathname === "/";
   return (
     <div className="user-shell min-h-screen pb-28">
       <UserBackground />
-      <header className="sticky top-0 z-40 border-b border-glass-border glass-panel">
+      {showHeader && (<header className="sticky top-0 z-40 border-b border-glass-border glass-panel">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:h-16">
           <Logo />
           <div className="ml-auto flex items-center gap-2">
@@ -135,7 +137,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             )}
           </div>
         </div>
-      </header>
+      </header>)}
+      {!showHeader && <div className="h-4" aria-hidden />}
       {children}
       <CapsuleDock />
     </div>
