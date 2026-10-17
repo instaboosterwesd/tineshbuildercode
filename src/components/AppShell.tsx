@@ -51,7 +51,7 @@ const NAV = [
 
 function DockLink({ to, label, Icon }: (typeof NAV)[number]) {
   const matchRoute = useMatchRoute();
-  const active = matchRoute({ to, exact: to === "/" });
+  const active = matchRoute({ to });
   return (
     <Link
       to={to}
