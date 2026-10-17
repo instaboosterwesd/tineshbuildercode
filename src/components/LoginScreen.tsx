@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { HackerLoader } from "@/components/effects/HackerLoader";
 import { LottieIcon, preloadLottie } from "@/components/effects/LottieIcon";
-import video from "@/assets/splash.webm.asset.json";
+import video from "@/assets/login-bg.mp4.asset.json";
 import { STICKERS } from "@/lib/stickers";
 
 const LOGIN_STICKERS = [STICKERS.welcome, STICKERS.google, STICKERS.lock, STICKERS.editProfile, STICKERS.proceed, STICKERS.shield, STICKERS.sendFlash];
