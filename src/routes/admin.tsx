@@ -38,7 +38,7 @@ const err = (e: unknown) => toast.error((e as Error).message || "Something went 
 const fmt = (d: string) => new Date(d).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" });
 
 function csv(name: string, rows: Record<string, unknown>[]) {
-  if (!rows.length) return toast.error("Nothing to export");
+  if (!rows.length) { toast.error("Nothing to export"); return; }
   const cols = Object.keys(rows[0]!);
   const body = [cols.join(","), ...rows.map((r) => cols.map((c) => `"${String(r[c] ?? "").replace(/"/g, '""')}"`).join(","))].join("\n");
   const a = document.createElement("a");
