@@ -13,7 +13,8 @@ import { uploadLogo, getTemplate, userBuild } from "@/lib/builder.functions";
 import { baseApkLabel } from "@/lib/base-apks";
 import { productId } from "@/lib/product-id";
 import { useAuth } from "@/hooks/useAuth";
-import { HackerLoader } from "@/components/effects/HackerLoader";
+import { HackerLoader, DetailSkeleton } from "@/components/effects/HackerLoader";
+import { SmartImage } from "@/components/SmartImage";
 
 const templateQuery = (id: string) => queryOptions({ queryKey: ["template", id], queryFn: () => getTemplate({ data: { id } }) });
 
@@ -35,6 +36,8 @@ export const Route = createFileRoute("/templates/$id")({
         ]
       : [{ title: "Template not found" }, { name: "robots", content: "noindex" }],
   }),
+  pendingComponent: () => <AppShell><DetailSkeleton /></AppShell>,
+  pendingMs: 200,
   component: TemplatePage,
 });
 
@@ -68,7 +71,7 @@ function TemplatePage() {
               )}
               {t.image && (
                 <TabsContent value="image">
-                  <img src={t.image} alt={t.name} className="w-full rounded-2xl border border-border" />
+                  <SmartImage src={t.image} alt={t.name} lazy={false} className="aspect-video w-full rounded-2xl border border-border" />
                 </TabsContent>
               )}
               {hasPreview && (

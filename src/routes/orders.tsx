@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { QueryFeedback } from "@/components/QueryFeedback";
 import { withRequestTimeout } from "@/lib/request-timeout";
 import { useAuth } from "@/hooks/useAuth";
+import { SmartImage } from "@/components/SmartImage";
 
 export const Route = createFileRoute("/orders")({
   head: () => ({
@@ -54,7 +55,7 @@ function Orders() {
       {data.map((b) => (
         <div key={b.id} className="surface clay flex items-center gap-3 p-4">
           {b.logo ? (
-            <img src={b.logo} alt="" className="size-12 shrink-0 rounded-2xl object-cover" />
+            <SmartImage src={b.logo} alt="" className="size-12 shrink-0 rounded-2xl" />
           ) : (
             <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground"><LottieIcon src={STICKERS.orders} className="size-6" /></span>
           )}

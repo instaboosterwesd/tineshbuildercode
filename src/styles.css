@@ -295,3 +295,15 @@
 @supports not (backdrop-filter: blur(1px)) {
   .surface, .glass-panel, .glass-dialog, .capsule-dock { background-color: var(--card); }
 }
+
+/* Loading system: subtle shimmer skeletons + image fade-in */
+.skeleton-shimmer {
+  background-color: color-mix(in oklab, var(--foreground) 8%, transparent);
+  background-image: linear-gradient(100deg, transparent 30%, color-mix(in oklab, var(--foreground) 9%, transparent) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-shimmer { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+.img-fade { opacity: 0; transition: opacity 200ms ease-out; }
+.img-fade.is-loaded { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .skeleton-shimmer { animation: none; } .img-fade { transition: none; } }

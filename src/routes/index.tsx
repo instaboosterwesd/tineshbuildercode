@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { baseApkLabel } from "@/lib/base-apks";
 import { matchesProduct, productId } from "@/lib/product-id";
 import { listTemplates } from "@/lib/builder.functions";
+import { SmartImage } from "@/components/SmartImage";
+import { SkeletonGrid } from "@/components/effects/HackerLoader";
 
 export const templatesQuery = queryOptions({ queryKey: ["templates"], queryFn: () => listTemplates() });
 
@@ -24,6 +26,8 @@ export const Route = createFileRoute("/")({
     ],
   }),
   loader: ({ context }) => context.queryClient.ensureQueryData(templatesQuery),
+  pendingComponent: () => <AppShell><main className="mx-auto max-w-6xl px-4 py-6"><SkeletonGrid /></main></AppShell>,
+  pendingMs: 200,
   component: Index,
 });
 
@@ -82,7 +86,7 @@ function Index() {
               <Link key={t.id} to="/templates/$id" params={{ id: t.id }} className="surface group overflow-hidden transition active:scale-[0.99] hover:border-primary/40 hover:shadow-glow">
                 <div className="relative aspect-[4/3] bg-muted sm:aspect-video">
                   {t.image ? (
-                    <img src={t.image} alt={t.name} loading="lazy" className="h-full w-full object-cover transition group-hover:scale-105" />
+                    <SmartImage src={t.image} alt={t.name} className="h-full w-full transition group-hover:scale-105" />
                   ) : (
                     <div className="grid h-full place-items-center"><ImageIcon className="size-8 text-muted-foreground" /></div>
                   )}
