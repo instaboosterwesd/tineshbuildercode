@@ -7,7 +7,7 @@ import { useTheme } from "@/lib/theme";
 import { getWalletInfo } from "@/lib/wallet.functions";
 import { Button } from "@/components/ui/button";
 
-export function Logo({ to = "/" }: { to?: "/" | "/admin" }) {
+export function Logo({ to = "/" }: { to?: "/" }) {
   return (
     <Link to={to} className="flex items-center gap-2 font-display text-lg font-bold">
       <span className="grid size-8 shrink-0 place-items-center rounded-xl bg-gradient-primary shadow-glow">

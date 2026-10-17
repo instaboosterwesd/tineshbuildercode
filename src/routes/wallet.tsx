@@ -149,7 +149,7 @@ function DepositDialog({ open, onOpenChange, upi, min }: { open: boolean; onOpen
         {!upi ? (
           <p className="text-sm text-muted-foreground">Payments are not available right now. Please contact support.</p>
         ) : step === "amount" ? (
-          <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); if (Number(amount) < min) return toast.error(`Minimum is ₹${min}`); setStep("pay"); }}>
+          <form className="grid gap-3" onSubmit={(e) => { e.preventDefault(); if (Number(amount) < min) { toast.error(`Minimum is ₹${min}`); return; } setStep("pay"); }}>
             <Input type="number" inputMode="numeric" min={min} step={1} required value={amount} onChange={(e) => setAmount(e.target.value)} placeholder={`₹${min}`} className="h-12 text-lg" autoFocus />
             <div className="flex gap-2">
               {[min, 500, 1000].filter((v, i, a) => a.indexOf(v) === i && v >= min).map((v) => (
