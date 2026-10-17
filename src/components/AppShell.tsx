@@ -12,14 +12,14 @@ import { cn } from "@/lib/utils";
 import { withRequestTimeout } from "@/lib/request-timeout";
 import { useSiteName } from "@/hooks/useSiteSettings";
 import { LoadingPanel } from "@/components/effects/HackerLoader";
-import { LottieIcon } from "@/components/effects/LottieIcon";
+import { LottieIcon, preloadLottie } from "@/components/effects/LottieIcon";
 import star from "@/assets/emoji-star.json.asset.json";
 import verified from "@/assets/emoji-verified.json.asset.json";
-import emojiHome from "@/assets/emoji-home.json.asset.json";
-import emojiWallet from "@/assets/emoji-wallet.json.asset.json";
-import emojiOrders from "@/assets/emoji-orders.json.asset.json";
-import emojiLeaders from "@/assets/emoji-leaders.json.asset.json";
-import emojiProfile from "@/assets/emoji-profile.json.asset.json";
+import emojiHome from "@/assets/emoji-home.tgs.asset.json";
+import emojiWallet from "@/assets/emoji-wallet.tgs.asset.json";
+import emojiOrders from "@/assets/emoji-orders.tgs.asset.json";
+import emojiLeaders from "@/assets/emoji-leaders.tgs.asset.json";
+import emojiProfile from "@/assets/emoji-profile.tgs.asset.json";
 import { UserBackground } from "@/components/effects/UserBackground";
 
 export function Logo({ to = "/" }: { to?: "/" }) {
@@ -98,6 +98,7 @@ function DockLink({ to, label, emoji }: (typeof NAV)[number]) {
 }
 
 function CapsuleDock() {
+  useEffect(() => { preloadLottie(NAV.map((n) => n.emoji)); }, []);
   return (
     <nav
       aria-label="Main navigation"

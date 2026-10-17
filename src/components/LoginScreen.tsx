@@ -7,10 +7,10 @@ import { HackerLoader } from "@/components/effects/HackerLoader";
 import { LottieIcon } from "@/components/effects/LottieIcon";
 import video from "@/assets/splash.webm.asset.json";
 import arrow from "@/assets/emoji-arrow.json.asset.json";
-import emojiUser from "@/assets/emoji-user.json.asset.json";
-import emojiMail from "@/assets/emoji-mail.json.asset.json";
-import emojiLock from "@/assets/emoji-lock.json.asset.json";
-import emojiFire from "@/assets/emoji-fire.json.asset.json";
+import emojiUser from "@/assets/emoji-user.tgs.asset.json";
+import emojiMail from "@/assets/emoji-mail.tgs.asset.json";
+import emojiLock from "@/assets/emoji-lock.tgs.asset.json";
+import emojiFire from "@/assets/emoji-fire.tgs.asset.json";
 
 type Props = {
   mode: "login" | "signup";
