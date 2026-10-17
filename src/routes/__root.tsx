@@ -17,6 +17,7 @@ import { ProfileCompletion } from "@/components/ProfileCompletion";
 import { themeInitScript } from "@/lib/theme";
 import { siteSettingsQuery } from "@/hooks/useSiteSettings";
 import { SiteAnnouncement } from "@/components/SiteAnnouncement";
+import { UserBackground } from "@/components/effects/UserBackground";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -139,11 +140,14 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <UserBackground />
+        <div className="app-content">
         <MaintenanceGate>
           <Outlet />
         </MaintenanceGate>
         <ProfileCompletion />
         <Toaster richColors position="top-center" />
+        </div>
       </AuthProvider>
     </QueryClientProvider>
   );

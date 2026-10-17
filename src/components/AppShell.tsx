@@ -14,7 +14,6 @@ import { useSiteName } from "@/hooks/useSiteSettings";
 import { LoadingPanel } from "@/components/effects/HackerLoader";
 import { LottieIcon, preloadLottie } from "@/components/effects/LottieIcon";
 import { STICKERS } from "@/lib/stickers";
-import { UserBackground } from "@/components/effects/UserBackground";
 
 export function Logo({ to = "/" }: { to?: "/" }) {
   const name = useSiteName();
@@ -91,12 +90,15 @@ function DockLink({ to, label, emoji }: (typeof NAV)[number]) {
   );
 }
 
-function CapsuleDock() {
+function CapsuleDock({ hidden }: { hidden: boolean }) {
   useEffect(() => { preloadLottie(NAV.map((n) => n.emoji)); }, []);
   return (
     <nav
       aria-label="Main navigation"
-      className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-3 pb-safe"
+      aria-hidden={hidden || undefined}
+      inert={hidden}
+      data-hidden={hidden ? "" : undefined}
+      className="auto-hide-dock fixed inset-x-0 bottom-0 z-50 flex justify-center px-3 pb-safe"
     >
       <div className="capsule-dock dock-in flex w-full max-w-lg items-center gap-1 border border-border/60 p-1.5">
         {NAV.map((item) => (
@@ -109,7 +111,7 @@ function CapsuleDock() {
   );
 }
 
-// Hide the top bar (and Home search) while scrolling down; reveal on scroll up.
+// Hide only the bottom navigation while scrolling down; reveal on scroll up.
 function useHideOnScroll(enabled: boolean) {
   const [hidden, setHidden] = useState(false);
   useEffect(() => {
@@ -133,19 +135,19 @@ function useHideOnScroll(enabled: boolean) {
   return hidden;
 }
 
-export function AppShell({ children }: { children: ReactNode }) {
+export function AppShell({ children, search }: { children: ReactNode; search?: ReactNode }) {
   const { user } = useAuth();
   const { data: wallet } = useWallet();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const showHeader = pathname === "/";
-  const hidden = useHideOnScroll(showHeader);
+  const hidden = useHideOnScroll(true);
   return (
-    <div className="user-shell min-h-screen pb-28" data-chrome-hidden={hidden ? "" : undefined}>
-      <UserBackground video={showHeader} />
-      {showHeader && (<header className="auto-hide sticky top-0 z-40 border-b border-glass-border glass-panel">
-        <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:h-16">
-          <Logo />
-          <div className="ml-auto flex items-center gap-2">
+    <div className="user-shell min-h-screen pb-28">
+      {showHeader && (<header className="home-header sticky top-0 z-40 border-b border-glass-border">
+        <div className="mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_minmax(0,1fr)]">
+          <div className="min-w-0"><Logo /></div>
+          <div className="col-span-2 row-start-2 min-w-0 sm:col-span-1 sm:col-start-2 sm:row-start-1">{search}</div>
+          <div className="col-start-2 row-start-1 flex items-center justify-end gap-2 sm:col-start-3">
             {user ? (
               <Link
                 to="/wallet"
@@ -165,7 +167,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </header>)}
       {!showHeader && <div className="h-4" aria-hidden />}
       {children}
-      <CapsuleDock />
+      <CapsuleDock hidden={hidden} />
     </div>
   );
 }

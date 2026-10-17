@@ -103,6 +103,7 @@
   --glass-border: oklch(1 0 0 / 0.8);
   --glass-fill: color-mix(in oklab, var(--card) 32%, transparent);
   --glass-field: color-mix(in oklab, var(--card) 20%, transparent);
+  --header-fill: color-mix(in oklab, var(--card) 8%, transparent);
   --glass-dialog: color-mix(in oklab, var(--card) 86%, transparent);
   --overlay: oklch(0.15 0.01 240 / 0.48);
   --glass-sheen: linear-gradient(125deg, var(--glass-highlight), transparent 46%);
@@ -272,13 +273,24 @@
 }
 .user-effects { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
 .dashboard-background { background-image: var(--page-wash); background-size: cover; background-position: center; background-repeat: no-repeat; }
+.app-content { position: relative; z-index: 1; }
+.home-header { background-color: var(--header-fill); backdrop-filter: blur(8px); }
+.home-search, .home-search-input, .dark .home-search-input {
+  background-color: transparent;
+  background-image: none;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+@media (min-width: 1024px) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  body, .dashboard-background { background-image: none; }
+}
 .hacker-background { display: block; width: 100%; height: 100%; opacity: 0.23; }
 .splash-cursor { position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: 0.65; }
 .splash-cursor[data-contained] { position: absolute; }
 .splash-cursor__canvas { display: block; width: 100%; height: 100%; }
 .user-shell { position: relative; isolation: isolate; }
 .user-shell > header, .user-shell > main { position: relative; z-index: 2; }
-.user-shell > header { position: sticky; }
+.user-shell > header { position: sticky; z-index: 40; }
 .login-screen { position: relative; isolation: isolate; color: var(--login-foreground); background-color: var(--background); background-image: var(--page-wash); background-attachment: fixed; background-size: cover; background-position: center; }
 .login-video, .login-video-overlay { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -2; }
 .login-video { object-fit: cover; }
@@ -308,8 +320,7 @@
 .img-fade.is-loaded { opacity: 1; }
 @media (prefers-reduced-motion: reduce) { .skeleton-shimmer { animation: none; } .img-fade { transition: none; } }
 
-/* Home top bar + search slide away while scrolling down */
-.auto-hide, .auto-hide-search { transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), opacity 320ms ease; will-change: transform; }
-[data-chrome-hidden] .auto-hide { transform: translateY(-110%); opacity: 0; }
-[data-chrome-hidden] .auto-hide-search { transform: translateY(calc(-100% - 4.5rem)); opacity: 0; pointer-events: none; }
-@media (prefers-reduced-motion: reduce) { .auto-hide, .auto-hide-search { transition: none; } }
+/* The header stays pinned; only the bottom navigation slides away. */
+.auto-hide-dock { transition: transform 420ms cubic-bezier(0.22, 1, 0.36, 1), opacity 320ms ease; will-change: transform; }
+.auto-hide-dock[data-hidden] { transform: translateY(110%); opacity: 0; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .auto-hide-dock { transition: none; } }

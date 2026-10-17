@@ -43,29 +43,19 @@ function Index() {
   const searching = q.trim() !== "";
 
   return (
-    <AppShell>
-      <section className="relative z-10 mx-auto max-w-7xl px-4 pt-5 text-center sm:pt-10 lg:px-8">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
-          Build your <span className="text-gradient">Android app</span> in minutes
-        </h1>
-      </section>
-
-      <section className="auto-hide-search sticky top-14 z-30 mx-auto max-w-7xl px-4 py-3 sm:top-16 sm:py-5 lg:px-8">
-        <div className="surface mx-auto flex max-w-2xl flex-col gap-2.5 p-2.5 backdrop-blur-xl sm:flex-row sm:items-center sm:p-3">
-          <div className="relative flex-1">
+    <AppShell search={
+          <div className="home-search relative w-full">
             <LottieIcon src={STICKERS.search} className="pointer-events-none absolute left-3 top-1/2 size-6 -translate-y-1/2" />
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search name or Product ID"
-              className="glass-field h-11 rounded-2xl pl-11 focus-visible:ring-1"
+              aria-label="Search templates"
+              className="home-search-input h-11 w-full rounded-2xl border-foreground/30 pl-11 text-foreground placeholder:text-foreground/75 focus-visible:ring-1"
             />
           </div>
-        </div>
-      </section>
-
-      <section className="relative z-10 mx-auto max-w-7xl px-4 pb-28 pt-1 lg:px-8">
-        <p className="mb-3 text-sm text-muted-foreground sm:mb-4">{list.length} template{list.length === 1 ? "" : "s"}</p>
+    }>
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pb-28 pt-5 lg:px-8">
         {list.length === 0 ? (
           <div className="surface grid place-items-center p-10 text-center sm:p-14">
             <span className="grid size-16 place-items-center rounded-3xl bg-accent text-accent-foreground shadow-soft">
