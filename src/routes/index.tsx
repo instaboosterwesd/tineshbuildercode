@@ -54,7 +54,7 @@ function Index() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search name or Product ID"
-              className="h-11 rounded-2xl border-0 bg-muted/60 pl-11 shadow-none focus-visible:ring-1"
+              className="glass-field h-11 rounded-2xl pl-11 focus-visible:ring-1"
             />
           </div>
         </div>
@@ -81,17 +81,17 @@ function Index() {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:gap-5 xl:grid-cols-4">
             {list.map((t) => (
-              <Link key={t.id} to="/templates/$id" params={{ id: t.id }} className="surface group overflow-hidden transition active:scale-[0.99] hover:border-primary/40 hover:shadow-glow">
-                <div className="relative aspect-[4/3] bg-muted sm:aspect-video">
+              <Link key={t.id} to="/templates/$id" params={{ id: t.id }} className="surface group flex flex-col overflow-hidden p-1.5 transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-glow active:scale-[0.99] sm:p-2">
+                <div className="relative aspect-square overflow-hidden rounded-[calc(var(--radius)*1.2)] bg-muted/40">
                   {t.image ? (
-                    <SmartImage src={t.image} alt={t.name} className="h-full w-full transition group-hover:scale-105" />
+                    <SmartImage src={t.image} alt={t.name} className="h-full w-full transition duration-500 group-hover:scale-105" />
                   ) : (
                     <div className="grid h-full place-items-center"><ImageIcon className="size-8 text-muted-foreground" /></div>
                   )}
                   {t.video && (
-                    <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-card/90 px-2 py-0.5 text-[11px] backdrop-blur">
+                    <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-card/70 px-2 py-0.5 text-[11px] backdrop-blur">
                       <LottieIcon src={STICKERS.video} className="size-4" /> Video
                     </span>
                   )}
@@ -99,10 +99,9 @@ function Index() {
                     {t.price > 0 ? `₹${t.price}` : "Free"}
                   </span>
                 </div>
-                <div className="p-3 sm:p-4">
-                  <span className="font-mono text-[11px] font-medium text-primary">#{productId(t.id)} · {baseApkLabel(t.base_apk)}</span>
-                  <h3 className="mt-0.5 truncate font-semibold sm:text-lg">{t.name}</h3>
-                  <p className="mt-0.5 line-clamp-2 hidden text-sm text-muted-foreground sm:block">{t.description || "No description"}</p>
+                <div className="min-w-0 px-1.5 pb-1.5 pt-2.5 sm:px-2 sm:pt-3">
+                  <h3 className="truncate text-sm font-semibold sm:text-base lg:text-lg">{t.name}</h3>
+                  <span className="mt-0.5 block truncate font-mono text-[10px] font-medium text-primary sm:text-[11px]">#{productId(t.id)} · {baseApkLabel(t.base_apk)}</span>
                 </div>
               </Link>
             ))}
