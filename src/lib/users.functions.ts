@@ -9,7 +9,7 @@ export const getMyProfile = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     const db = await adminDb();
     const [{ data: p }, { data: logins }, { data: w }, { count: builds }] = await Promise.all([
-      db.from("profiles").select("name, email, telegram_id, created_at").eq("id", context.userId).maybeSingle(),
+      db.from("profiles").select("name, email, telegram_id, avatar_url, created_at").eq("id", context.userId).maybeSingle(),
       db.from("login_history").select("id, user_agent, created_at").eq("user_id", context.userId).order("created_at", { ascending: false }).limit(20),
       db.from("wallets").select("balance").eq("user_id", context.userId).maybeSingle(),
       db.from("build_requests").select("id", { count: "exact", head: true }).eq("user_id", context.userId),
@@ -37,6 +37,31 @@ export const recordLogin = createServerFn({ method: "POST" })
     const db = await adminDb();
     await db.from("login_history").insert({ user_id: context.userId, user_agent: data.user_agent });
     return { ok: true };
+  });
+
+export const uploadAvatar = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((d: { image?: string }) => {
+    const image = String(d?.image ?? "").replace(/^data:image\/[a-z+]+;base64,/, "");
+    if (!image || image.length > 4_500_000 || !/^[A-Za-z0-9+/=]+$/.test(image)) throw new Error("Image must be under 3 MB");
+    return { image };
+  })
+  .handler(async ({ data, context }) => {
+    const key = process.env["IMGBB_API_KEY"];
+    if (!key) throw new Error("Photo upload is not configured");
+    const form = new FormData();
+    form.append("image", data.image);
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, { method: "POST", body: form });
+    const json = (await res.json().catch(() => null)) as { data?: { display_url?: string; url?: string } } | null;
+    const url = json?.data?.display_url || json?.data?.url;
+    if (!res.ok || !url) {
+      console.error("imgbb upload failed", res.status, json);
+      throw new Error("Photo upload failed. Please try again.");
+    }
+    const db = await adminDb();
+    const { error } = await db.from("profiles").update({ avatar_url: url }).eq("id", context.userId);
+    if (error) throw new Error(error.message);
+    return { url };
   });
 
 /* ---------- Admin ---------- */
