@@ -10,6 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
+import { Route as OrdersRouteImport } from './routes/orders'
+import { Route as ProfileRouteImport } from './routes/profile'
 import { Route as WalletRouteImport } from './routes/wallet'
 import { Route as TemplatesIdRouteImport } from './routes/templates.$id'
 import { Route as ApiPublicBuildRouteImport } from './routes/api/public/build'
@@ -17,6 +21,26 @@ import { Route as ApiPublicBuildRouteImport } from './routes/api/public/build'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrdersRoute = OrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProfileRoute = ProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
 const WalletRoute = WalletRouteImport.update({
@@ -37,12 +61,20 @@ const ApiPublicBuildRoute = ApiPublicBuildRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/orders': typeof OrdersRoute
+  '/profile': typeof ProfileRoute
   '/wallet': typeof WalletRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/api/public/build': typeof ApiPublicBuildRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/orders': typeof OrdersRoute
+  '/profile': typeof ProfileRoute
   '/wallet': typeof WalletRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/api/public/build': typeof ApiPublicBuildRoute
@@ -50,20 +82,53 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/orders': typeof OrdersRoute
+  '/profile': typeof ProfileRoute
   '/wallet': typeof WalletRoute
   '/templates/$id': typeof TemplatesIdRoute
   '/api/public/build': typeof ApiPublicBuildRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/wallet' | '/templates/$id' | '/api/public/build'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/leaderboard'
+    | '/orders'
+    | '/profile'
+    | '/wallet'
+    | '/templates/$id'
+    | '/api/public/build'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/wallet' | '/templates/$id' | '/api/public/build'
-  id: '__root__' | '/' | '/wallet' | '/templates/$id' | '/api/public/build'
+  to:
+    | '/'
+    | '/auth'
+    | '/leaderboard'
+    | '/orders'
+    | '/profile'
+    | '/wallet'
+    | '/templates/$id'
+    | '/api/public/build'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/leaderboard'
+    | '/orders'
+    | '/profile'
+    | '/wallet'
+    | '/templates/$id'
+    | '/api/public/build'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
+  LeaderboardRoute: typeof LeaderboardRoute
+  OrdersRoute: typeof OrdersRoute
+  ProfileRoute: typeof ProfileRoute
   WalletRoute: typeof WalletRoute
   TemplatesIdRoute: typeof TemplatesIdRoute
   ApiPublicBuildRoute: typeof ApiPublicBuildRoute
@@ -76,6 +141,34 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/orders': {
+      id: '/orders'
+      path: '/orders'
+      fullPath: '/orders'
+      preLoaderRoute: typeof OrdersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/profile': {
+      id: '/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/wallet': {
@@ -104,6 +197,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
+  LeaderboardRoute: LeaderboardRoute,
+  OrdersRoute: OrdersRoute,
+  ProfileRoute: ProfileRoute,
   WalletRoute: WalletRoute,
   TemplatesIdRoute: TemplatesIdRoute,
   ApiPublicBuildRoute: ApiPublicBuildRoute,
