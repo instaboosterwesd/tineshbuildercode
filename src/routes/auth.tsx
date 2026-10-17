@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "sonner";
-import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,8 +33,7 @@ function AuthPage() {
     if (r.error) toast.error("Google sign-in failed");
   }
   return (
-    <AppShell>
-      <main className="grid place-items-center px-4 py-10">
+    <main className="grid min-h-screen place-items-center px-4 py-10">
         <form onSubmit={submit} className="surface w-full max-w-sm space-y-3 p-6">
           <h1 className="text-2xl font-bold">{mode === "login" ? "Welcome back" : "Create account"}</h1>
           {mode === "signup" && <Input name="name" placeholder="Your name" required />}
@@ -47,7 +45,6 @@ function AuthPage() {
             {mode === "login" ? "New here? Create an account" : "Already have an account? Login"}
           </button>
         </form>
-      </main>
-    </AppShell>
+    </main>
   );
 }
