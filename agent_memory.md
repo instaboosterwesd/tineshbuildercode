@@ -127,3 +127,8 @@ Tests: `src/test/request-timeout.test.ts`, `src/test/profile-completion.test.ts`
 - getTemplate accepts safe Firebase push IDs rather than UUID-only IDs.
 - Preview and live Vercel real signup/free-request tests passed; saved logo fetched as HTTP 200 image/png and the live Orders page rendered it. Deployment tineshbuildercode-j3n060j6n-instaboosterwesds-projects.vercel.app was Ready and aliased to tineshautomarketv1.vercel.app.
 - Full APK completion/download is not verified. APK output, template videos and old missing Google Storage objects are not repaired by the logo change. Temporary test template was removed after the upload check.
+## Remix session (October 17, 2026, new Lovable project)
+- Project re-imported from instaboosterwesd/tineshbuildercode into a fresh Lovable project; project memory (mem://) now holds core rules.
+- Dashboard backgrounds re-uploaded to this project's CDN from reversebypass.store (dashboard-dark-bg.webp for dark, dashboard-light-bg.webp for light) via --page-wash in src/styles.css.
+- Top header (logo + wallet/login) shows only on the Home page (/); Wallet, Orders, Leaders, Profile etc. hide it (AppShell showHeader).
+- This remix has no secrets configured yet (Firebase service account, GitHub, ImgBB, Vercel, admin password). Keys pasted in chat should be rotated.
