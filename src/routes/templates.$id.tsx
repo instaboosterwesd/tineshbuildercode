@@ -129,7 +129,7 @@ function BuildDialog({ open, onOpenChange, template }: { open: boolean; onOpenCh
   }
 
   async function build() {
-    if (!logo) return toast.error("Choose a logo");
+    if (!logo) { toast.error("Choose a logo"); return; }
     setLoading(true);
     try {
       const { path, token } = await createLogoUploadUrl({ data: { filename: logo.name } });
