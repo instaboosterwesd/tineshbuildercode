@@ -108,3 +108,16 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const adminUserDetail = createServerFn({ method: "POST" })
+  .inputValidator((d: { password: string; id: string }) => ({ password: d?.password, id: uuid(d?.id, "user") }))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    const db = await adminDb();
+    const [{ data: tx }, { data: logins }, { data: builds }] = await Promise.all([
+      db.from("wallet_transactions").select("id, amount, kind, note, created_at").eq("user_id", data.id).order("created_at", { ascending: false }).limit(50),
+      db.from("login_history").select("id, user_agent, created_at").eq("user_id", data.id).order("created_at", { ascending: false }).limit(20),
+      db.from("build_requests").select("id, app_name, template_name, status, charged, created_at").eq("user_id", data.id).order("created_at", { ascending: false }).limit(50),
+    ]);
+    return { transactions: tx ?? [], logins: logins ?? [], builds: builds ?? [] };
+  });
