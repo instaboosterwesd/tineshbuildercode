@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
-  LayoutDashboard, Hammer, Wallet, Users, LayoutTemplate, Settings, LogOut, Search, Download, Trash2,
+  LayoutDashboard, Menu, Hammer, Wallet, Users, LayoutTemplate, Settings, LogOut, Search, Download, Trash2,
   Check, X, Lock, Pencil, Plus, Minus, Eye, Shield, RefreshCw, IndianRupee, Clock, Upload, FileCode, Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import {
 import { adminGetSettings, adminSaveSettings, adminListDeposits, adminDecideDeposit } from "@/lib/wallet.functions";
 import { adminListUsers, adminUpdateUser, adminAdjustBalance, adminDeleteUser, adminUserDetail } from "@/lib/users.functions";
 import { BASE_APKS, baseApkLabel } from "@/lib/base-apks";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { HackerLoader, LoadingPanel } from "@/components/effects/HackerLoader";
 import { QueryFeedback } from "@/components/QueryFeedback";
@@ -108,43 +109,56 @@ function Panel({ pw, logout }: { pw: string; logout: () => void }) {
   const pendingDeps = deposits.data?.filter((d) => d.status === "pending").length ?? 0;
   const badge: Partial<Record<Tab, number>> = { builds: pendingBuilds, deposits: pendingDeps };
 
+  const [menuOpen, setMenuOpen] = useState(false);
+  const pick = (id: Tab) => { setTab(id); setMenuOpen(false); };
+  const totalBadge = pendingBuilds + pendingDeps;
   return (
-    <div className="min-h-screen md:flex">
-      <aside className="border-b border-glass-border glass-panel md:sticky md:top-0 md:h-screen md:w-60 md:shrink-0 md:border-b-0 md:border-r">
-        <div className="flex items-center gap-2 px-4 py-4">
-          <span className="grid size-9 place-items-center rounded-xl bg-gradient-primary shadow-glow"><Shield className="size-4 text-primary-foreground" /></span>
-          <span className="font-display text-lg font-bold">Admin</span>
-          <div className="ml-auto flex md:hidden"><ThemeToggle /></div>
-        </div>
-        <nav className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-col md:overflow-visible">
-          {TABS.map(({ id, label, Icon }) => (
-            <button
-              key={id}
-              onClick={() => setTab(id)}
-              className={cn(
-                "flex shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground",
-                tab === id && "bg-accent text-accent-foreground clay",
-              )}
-            >
-              <Icon className="size-4" /> {label}
-              {!!badge[id] && <span className="ml-auto rounded-full bg-primary px-2 text-xs text-primary-foreground">{badge[id]}</span>}
-            </button>
-          ))}
-        </nav>
-        <div className="hidden gap-2 px-3 md:absolute md:bottom-4 md:flex md:w-60">
-          <ThemeToggle />
-          <Button variant="ghost" size="sm" asChild><Link to="/"><Eye className="size-4" /> Site</Link></Button>
-          <Button variant="ghost" size="sm" onClick={logout}><LogOut className="size-4" /> Logout</Button>
-        </div>
-      </aside>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6">
-        <div className="mb-5 flex items-center justify-between gap-2">
-          <h1 className="text-2xl font-bold sm:text-3xl">{TABS.find((t) => t.id === tab)?.label}</h1>
-          <div className="flex gap-1">
-            <Button variant="outline" size="sm" onClick={() => qc.invalidateQueries({ queryKey: ["adm"] })}><RefreshCw className="size-4" /> Refresh</Button>
-            <Button variant="ghost" size="sm" className="md:hidden" onClick={logout}><LogOut className="size-4" /></Button>
+    <div className="min-h-screen">
+      <header className="sticky top-0 z-40 border-b border-glass-border glass-panel">
+        <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-3 sm:px-6">
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" aria-label="Open menu" className="relative">
+                <Menu className="size-5" />
+                {totalBadge > 0 && <span className="absolute right-1 top-1 size-2 rounded-full bg-primary" />}
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-72 glass-panel p-0">
+              <SheetHeader className="px-4 py-4 text-left">
+                <SheetTitle className="flex items-center gap-2">
+                  <span className="grid size-9 place-items-center rounded-xl bg-gradient-primary shadow-glow"><Shield className="size-4 text-primary-foreground" /></span>
+                  Admin
+                </SheetTitle>
+              </SheetHeader>
+              <nav className="flex flex-col gap-1 px-3">
+                {TABS.map(({ id, label, Icon }) => (
+                  <button
+                    key={id}
+                    onClick={() => pick(id)}
+                    className={cn(
+                      "flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-foreground transition hover:text-foreground",
+                      tab === id && "bg-accent text-accent-foreground clay",
+                    )}
+                  >
+                    <Icon className="size-4" /> {label}
+                    {!!badge[id] && <span className="ml-auto rounded-full bg-primary px-2 text-xs text-primary-foreground">{badge[id]}</span>}
+                  </button>
+                ))}
+              </nav>
+              <div className="mt-6 flex flex-wrap gap-2 border-t border-glass-border px-3 pt-4">
+                <ThemeToggle />
+                <Button variant="ghost" size="sm" asChild><Link to="/"><Eye className="size-4" /> Site</Link></Button>
+                <Button variant="ghost" size="sm" onClick={logout}><LogOut className="size-4" /> Logout</Button>
+              </div>
+            </SheetContent>
+          </Sheet>
+          <h1 className="truncate text-lg font-bold sm:text-xl">{TABS.find((t) => t.id === tab)?.label}</h1>
+          <div className="ml-auto flex gap-1">
+            <Button variant="outline" size="sm" onClick={() => qc.invalidateQueries({ queryKey: ["adm"] })}><RefreshCw className="size-4" /><span className="hidden sm:inline"> Refresh</span></Button>
           </div>
         </div>
+      </header>
+      <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6">
         {tab === "dash" && <Dashboard pw={pw} go={setTab} />}
         {tab === "builds" && <Builds pw={pw} />}
         {tab === "deposits" && <Deposits pw={pw} />}

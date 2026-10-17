@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { uploadLogo, getTemplate, userBuild } from "@/lib/builder.functions";
-import { baseApkLabel } from "@/lib/base-apks";
+import { baseApkLabel, baseNeedsAppId } from "@/lib/base-apks";
 import { productId } from "@/lib/product-id";
 import { useAuth } from "@/hooks/useAuth";
 import { HackerLoader, DetailSkeleton } from "@/components/effects/HackerLoader";
@@ -123,7 +123,7 @@ function BuildDialog({ open, onOpenChange, template }: { open: boolean; onOpenCh
   const [extra, setExtra] = useState("");
   const [logo, setLogo] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const isTeacher = template.base_apk === "teacher";
+  const isTeacher = baseNeedsAppId(template.base_apk);
   const balance = wallet?.balance ?? 0;
   const short = template.price > 0 && balance < template.price;
 

@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireFirebaseAuth } from "@/integrations/firebase/auth-middleware";
 import { apkName, APP_ID_RE, checkPassword, int, LOGO_RE, signPath, str, uuid, walletChange } from "@/lib/server-helpers";
-import { BASE_APKS } from "@/lib/base-apks";
+import { BASE_APKS, baseNeedsAppId } from "@/lib/base-apks";
 import { validateLogoUpload } from "@/lib/image-upload";
 import { randomPackageName } from "@/lib/package-name";
 
@@ -93,8 +93,8 @@ export const userBuild = createServerFn({ method: "POST" })
     const userId = context.userId;
     const t = await db.dbGet<{ name: string; base_apk: string; price: number }>(`templates/${data.template_id}`);
     if (!t) throw new Error("Template not found");
-    if (t.base_apk === "teacher" && !data.app_id) throw new Error("App ID is required for this template");
-    if (t.base_apk !== "teacher" && !data.register_link) throw new Error("Register link is required");
+    if (baseNeedsAppId(t.base_apk) && !data.app_id) throw new Error("App ID is required for this template");
+    if (!baseNeedsAppId(t.base_apk) && !data.register_link) throw new Error("Register link is required");
     const media = await db.dbGet<{ user_id: string }>(`mediaFiles/${data.logo_path.replace(/\./g, "_")}`);
     if (!media || media.user_id !== userId) throw new Error("Please upload your logo again");
     const profile = await db.dbGet<{ name?: string; email?: string }>(`profiles/${userId}`);
@@ -310,7 +310,7 @@ export const adminBuild = createServerFn({ method: "POST" })
     const db = await adb();
     const t = await db.dbGet<{ name: string; base_apk: string }>(`templates/${fields.template_id}`);
     if (!t) throw new Error("Template not found");
-    if (t.base_apk === "teacher" && !fields.app_id) throw new Error("App ID is required for Teacher");
+    if (baseNeedsAppId(t.base_apk) && !fields.app_id) throw new Error("App ID is required for this template");
     const id = crypto.randomUUID();
     const row = {
       ...fields, id, template_name: t.name, requester_name: "Admin", requester_email: "admin@builder.local",

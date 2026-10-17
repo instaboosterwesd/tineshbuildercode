@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Moon, Sun, LogIn } from "lucide-react";
 import logoImg from "@/assets/logo.png";
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/lib/theme";
 import { getWalletInfo } from "@/lib/wallet.functions";
@@ -109,15 +109,40 @@ function CapsuleDock() {
   );
 }
 
+// Hide the top bar (and Home search) while scrolling down; reveal on scroll up.
+function useHideOnScroll(enabled: boolean) {
+  const [hidden, setHidden] = useState(false);
+  useEffect(() => {
+    if (!enabled) { setHidden(false); return; }
+    let last = window.scrollY;
+    let raf = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        const y = window.scrollY;
+        const d = y - last;
+        if (y < 64) setHidden(false);
+        else if (d > 6) setHidden(true);
+        else if (d < -6) setHidden(false);
+        if (Math.abs(d) > 6) last = y;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); };
+  }, [enabled]);
+  return hidden;
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { data: wallet } = useWallet();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const showHeader = pathname === "/";
+  const hidden = useHideOnScroll(showHeader);
   return (
-    <div className="user-shell min-h-screen pb-28">
-      <UserBackground />
-      {showHeader && (<header className="sticky top-0 z-40 border-b border-glass-border glass-panel">
+    <div className="user-shell min-h-screen pb-28" data-chrome-hidden={hidden ? "" : undefined}>
+      <UserBackground video={showHeader} />
+      {showHeader && (<header className="auto-hide sticky top-0 z-40 border-b border-glass-border glass-panel">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:h-16">
           <Logo />
           <div className="ml-auto flex items-center gap-2">
