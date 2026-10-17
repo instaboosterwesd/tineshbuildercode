@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useMatchRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Hammer, Home, Trophy, User, Wallet, Moon, Sun, LogIn, Package } from "lucide-react";
 import type { ReactNode } from "react";
@@ -6,6 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/lib/theme";
 import { getWalletInfo } from "@/lib/wallet.functions";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export function Logo({ to = "/" }: { to?: "/" }) {
   return (
@@ -18,10 +19,16 @@ export function Logo({ to = "/" }: { to?: "/" }) {
   );
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { theme, toggle } = useTheme();
   return (
-    <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme" className="rounded-full">
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={toggle}
+      aria-label="Toggle theme"
+      className={cn("rounded-full", className)}
+    >
       {theme === "dark" ? <Sun className="size-4" /> : <Moon className="size-4" />}
     </Button>
   );
@@ -42,58 +49,86 @@ const NAV = [
   { to: "/profile", label: "Profile", Icon: User },
 ] as const;
 
+function DockLink({ to, label, Icon }: (typeof NAV)[number]) {
+  const matchRoute = useMatchRoute();
+  const active = matchRoute({ to });
+  return (
+    <Link
+      to={to}
+      title={label}
+      aria-label={label}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "group relative flex shrink-0 items-center gap-2 rounded-full px-3 py-2.5 text-sm font-semibold transition-all duration-300 ease-out",
+        "hover:-translate-y-1 active:translate-y-0 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        active
+          ? "bg-primary text-primary-foreground clay-btn shadow-glow"
+          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+      )}
+    >
+      <Icon
+        className={cn(
+          "size-5 shrink-0 transition-transform duration-300 group-hover:scale-115",
+          active && "scale-110",
+        )}
+      />
+      <span
+        className={cn(
+          "overflow-hidden whitespace-nowrap transition-all duration-300 max-sm:hidden",
+          active ? "max-w-24 opacity-100" : "max-w-0 opacity-0 group-hover:max-w-24 group-hover:opacity-100",
+        )}
+      >
+        {label}
+      </span>
+    </Link>
+  );
+}
+
+function CapsuleDock() {
+  return (
+    <nav
+      aria-label="Main navigation"
+      className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-3 pb-safe"
+    >
+      <div className="capsule-dock dock-in flex max-w-[calc(100vw-1.5rem)] items-center gap-1 border border-border/60 p-1.5">
+        {NAV.map((item) => (
+          <DockLink key={item.to} {...item} />
+        ))}
+        <span aria-hidden className="mx-1 h-6 w-px shrink-0 bg-border" />
+        <ThemeToggle className="size-9 shrink-0 hover:-translate-y-1" />
+      </div>
+    </nav>
+  );
+}
+
 export function AppShell({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const { data: wallet } = useWallet();
   return (
-    <div className="min-h-screen pb-20 md:pb-0">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-lg">
+    <div className="min-h-screen pb-28">
+      <header className="sticky top-0 z-40 bg-background/70 backdrop-blur-lg">
         <div className="mx-auto flex h-14 max-w-6xl items-center gap-2 px-4 sm:h-16">
           <Logo />
-          <nav className="ml-6 hidden items-center gap-1 md:flex">
-            {NAV.map(({ to, label, Icon }) => (
-              <Link
-                key={to}
-                to={to}
-                activeOptions={{ exact: to === "/" }}
-                className="flex items-center gap-1.5 rounded-full px-3.5 py-2 text-sm font-medium text-muted-foreground transition hover:text-foreground"
-                activeProps={{ className: "bg-accent text-accent-foreground" }}
-              >
-                <Icon className="size-4" /> {label}
-              </Link>
-            ))}
-          </nav>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-2">
             {user ? (
-              <Link to="/wallet" className="flex items-center gap-1.5 rounded-full bg-card clay px-3 py-1.5 text-sm font-semibold">
+              <Link
+                to="/wallet"
+                className="flex items-center gap-1.5 rounded-full bg-card clay px-3.5 py-2 text-sm font-semibold transition hover:-translate-y-0.5"
+              >
                 <Wallet className="size-4 text-primary" /> ₹{wallet?.balance ?? 0}
               </Link>
             ) : (
               <Button asChild size="sm" variant="hero" className="rounded-full">
-                <Link to="/auth"><LogIn className="size-4" /> Login</Link>
+                <Link to="/auth">
+                  <LogIn className="size-4" /> Login
+                </Link>
               </Button>
             )}
-            <ThemeToggle />
           </div>
         </div>
       </header>
       {children}
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background/90 backdrop-blur-lg pb-safe md:hidden">
-        <div className="mx-auto grid max-w-md grid-cols-5">
-          {NAV.map(({ to, label, Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              activeOptions={{ exact: to === "/" }}
-              className="flex flex-col items-center gap-0.5 pt-2 text-[11px] font-medium text-muted-foreground"
-              activeProps={{ className: "text-primary" }}
-            >
-              <Icon className="size-5" />
-              {label}
-            </Link>
-          ))}
-        </div>
-      </nav>
+      <CapsuleDock />
     </div>
   );
 }

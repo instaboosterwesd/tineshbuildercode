@@ -52,6 +52,7 @@
 
 :root {
   --radius: 1.1rem;
+  --dock-bg: color-mix(in oklab, var(--background) 80%, transparent);
   --background: oklch(0.955 0.018 260);
   --foreground: oklch(0.2 0.025 260);
   --card: oklch(1 0 0);
@@ -98,6 +99,7 @@
 
 .dark {
   --background: oklch(0.16 0.015 260);
+  --dock-bg: color-mix(in oklab, oklch(0.245 0.022 260) 88%, transparent);
   --foreground: oklch(0.96 0.005 250);
   --card: oklch(0.205 0.018 260);
   --card-foreground: oklch(0.96 0.005 250);
@@ -172,3 +174,32 @@
 @utility clay { box-shadow: var(--shadow-clay); }
 @utility clay-inset { box-shadow: var(--shadow-clay-inset); }
 @utility clay-btn { box-shadow: var(--shadow-clay-btn); }
+
+/* Floating capsule dock navigation */
+@utility capsule-dock {
+  border-radius: 9999px;
+  background-color: var(--dock-bg);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  box-shadow: var(--shadow-clay), 0 18px 40px -18px color-mix(in oklab, var(--foreground) 30%, transparent);
+}
+
+@keyframes dock-in {
+  from {
+    opacity: 0;
+    transform: translateY(22px) scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@utility dock-in {
+  animation: dock-in 0.55s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+
+.dark .capsule-dock {
+  border-color: color-mix(in oklab, var(--foreground) 16%, transparent);
+}
