@@ -44,8 +44,9 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
-// Media pointers (/__l5e/...) are served by Lovable hosting. When this app runs
-// elsewhere (e.g. Vercel), fetch them from the Lovable project host instead.
+// Media pointers (/__l5e/...) are shipped inside public/__l5e, so static hosting
+// (e.g. Vercel) serves them from the repo itself. This proxy is the fallback for
+// any pointer that has no local copy.
 const ASSET_ORIGIN = "https://ba135e1b-c2e0-4f8a-bfcd-d194076f3097.lovableproject.com";
 
 async function proxyAsset(request: Request): Promise<Response | null> {
