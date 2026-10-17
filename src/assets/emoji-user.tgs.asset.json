@@ -1,11 +1,11 @@
 {
   "version": 1,
-  "asset_id": "f31a263a-d1fe-4bdf-b4f2-e15cc376e824",
-  "project_id": "13a6055a-e35f-4667-aedc-9767b64b6dbf",
-  "url": "/__l5e/assets-v1/f31a263a-d1fe-4bdf-b4f2-e15cc376e824/emoji-user.tgs",
-  "r2_key": "a/v1/13a6055a-e35f-4667-aedc-9767b64b6dbf/f31a263a-d1fe-4bdf-b4f2-e15cc376e824/emoji-user.tgs",
+  "asset_id": "0633eecb-07c3-4d4e-9c0a-6c060225eb37",
+  "project_id": "b1505cee-5b69-4a00-b753-c86451a67aaa",
+  "url": "/__l5e/assets-v1/0633eecb-07c3-4d4e-9c0a-6c060225eb37/emoji-user.tgs",
+  "r2_key": "a/v1/b1505cee-5b69-4a00-b753-c86451a67aaa/0633eecb-07c3-4d4e-9c0a-6c060225eb37/emoji-user.tgs",
   "original_filename": "emoji-user.tgs",
   "size": 52464,
-  "content_type": "application/octet-stream",
-  "created_at": "2026-10-17T12:16:42Z"
+  "content_type": "application/x-gzip",
+  "created_at": "2026-10-17T13:56:00Z"
 }

@@ -39,6 +39,7 @@ export function apkName(app: string) {
 /** Signed download URL for a storage path (null-safe). */
 export async function signPath(path: string | null | undefined, download?: string): Promise<string | null> {
   if (!path) return null;
+  if (/^https:\/\/i\.ibb\.co\//.test(path)) return path;
   const { storageSignUrl, dbGet } = await import("@/integrations/firebase/admin.server");
   if (LOGO_RE.test(path)) {
     const media = await dbGet<{ url: string }>(`mediaFiles/${path.replace(/\./g, "_")}`);

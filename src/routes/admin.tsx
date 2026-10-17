@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import {
   LayoutDashboard, Hammer, Wallet, Users, LayoutTemplate, Settings, LogOut, Search, Download, Trash2,
-  Check, X, Lock, Pencil, Plus, Minus, Eye, Shield, RefreshCw, IndianRupee, Clock,
+  Check, X, Lock, Pencil, Plus, Minus, Eye, Shield, RefreshCw, IndianRupee, Clock, Upload, FileCode, Image as ImageIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import { StatusBadge } from "@/components/StatusBadge";
 import { ThemeToggle } from "@/components/AppShell";
 import {
   adminLogin, adminOverview, adminDecide, adminDeleteRequest, adminEncrypt,
-  adminListTemplates, adminSaveTemplate, adminDeleteTemplate,
+  adminListTemplates, adminSaveTemplate, adminDeleteTemplate, adminUploadTemplateImage,
 } from "@/lib/builder.functions";
 import { adminGetSettings, adminSaveSettings, adminListDeposits, adminDecideDeposit } from "@/lib/wallet.functions";
 import { adminListUsers, adminUpdateUser, adminAdjustBalance, adminDeleteUser, adminUserDetail } from "@/lib/users.functions";
@@ -494,16 +494,39 @@ function TemplateDialog({ pw, t, onClose }: { pw: string; t: Partial<Tpl>; onClo
   const qc = useQueryClient();
   const [v, setV] = useState({ name: t.name ?? "", description: t.description ?? "", base_apk: t.base_apk ?? "bingo", price: String(t.price ?? 0), html: t.html ?? "", show_preview: t.show_preview ?? true });
   const [busy, setBusy] = useState(false);
+  const [imageUrl, setImageUrl] = useState<string>(t.image_url ?? "");
+  const [preview, setPreview] = useState<string | null>((t as { image?: string | null }).image ?? null);
+  const [uploading, setUploading] = useState(false);
+  const [htmlName, setHtmlName] = useState("");
   const set = (k: keyof typeof v) => (e: { target: { value: string } }) => setV({ ...v, [k]: e.target.value });
+  const pickImage = async (file?: File) => {
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) { toast.error("Image must be under 3 MB"); return; }
+    setUploading(true);
+    try {
+      const dataUrl = await new Promise<string>((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result)); r.onerror = rej; r.readAsDataURL(file); });
+      setPreview(dataUrl);
+      const { url } = await adminUploadTemplateImage({ data: { password: pw, filename: file.name, image: dataUrl } });
+      setImageUrl(url); toast.success("Image uploaded");
+    } catch (x) { err(x); setPreview(null); }
+    setUploading(false);
+  };
+  const pickHtml = async (file?: File) => {
+    if (!file) return;
+    const text = await file.text();
+    setV((s) => ({ ...s, html: text })); setHtmlName(file.name);
+  };
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-xl">
         <DialogHeader><DialogTitle>{t.id ? "Edit template" : "New template"}</DialogTitle></DialogHeader>
         <form className="space-y-3" onSubmit={async (e) => {
-          e.preventDefault(); setBusy(true);
+          e.preventDefault();
+          if (uploading) { toast.error("Wait for the image to finish uploading"); return; }
+          setBusy(true);
           try {
-            await adminSaveTemplate({ data: { password: pw, id: t.id, ...v, price: Number(v.price), image_url: t.image_url ?? "", video_url: t.video_url ?? "" } });
-            toast.success("Saved"); qc.invalidateQueries({ queryKey: ["adm"] }); onClose();
+            await adminSaveTemplate({ data: { password: pw, id: t.id, ...v, price: Number(v.price), image_url: imageUrl, video_url: t.video_url ?? "" } });
+            toast.success("Saved"); qc.invalidateQueries({ queryKey: ["adm"] }); qc.invalidateQueries({ queryKey: ["templates"] }); onClose();
           } catch (x) { err(x); }
           setBusy(false);
         }}>
@@ -515,7 +538,36 @@ function TemplateDialog({ pw, t, onClose }: { pw: string; t: Partial<Tpl>; onClo
             </select>
             <Input type="number" min={0} placeholder="Price ₹" value={v.price} onChange={set("price")} className="w-32" />
           </div>
-          <Textarea placeholder="HTML" value={v.html} onChange={set("html")} rows={8} className="font-mono text-xs" required />
+          <div className="space-y-1.5">
+            <p className="text-sm font-semibold">Template image</p>
+            <div className="flex items-center gap-3">
+              <div className="grid size-20 shrink-0 place-items-center overflow-hidden rounded-xl border border-input bg-muted/40">
+                {preview ? <img src={preview} alt="Template preview" className="h-full w-full object-cover" /> : <ImageIcon className="size-6 text-muted-foreground" />}
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <Button type="button" variant="outline" size="sm" disabled={uploading} asChild>
+                  <label className="cursor-pointer">
+                    <Upload className="size-4" /> {uploading ? "Uploading…" : preview ? "Change image" : "Upload image"}
+                    <input type="file" accept="image/png,image/jpeg,image/webp" className="sr-only" disabled={uploading} onChange={(e) => { pickImage(e.target.files?.[0]); e.target.value = ""; }} />
+                  </label>
+                </Button>
+                <span className="text-xs text-muted-foreground">PNG, JPG or WEBP · max 3 MB</span>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-sm font-semibold">HTML</p>
+              <Button type="button" variant="outline" size="sm" asChild>
+                <label className="cursor-pointer">
+                  <FileCode className="size-4" /> {htmlName ? "Change HTML file" : "Select HTML file"}
+                  <input type="file" accept=".html,.htm,text/html" className="sr-only" onChange={(e) => { pickHtml(e.target.files?.[0]); e.target.value = ""; }} />
+                </label>
+              </Button>
+            </div>
+            {htmlName && <p className="truncate text-xs text-muted-foreground">Loaded: {htmlName}</p>}
+            <Textarea placeholder="Paste HTML or select a file" value={v.html} onChange={set("html")} rows={8} className="font-mono text-xs" required />
+          </div>
           <label className="flex items-center justify-between text-sm">Show live preview to users <Switch checked={v.show_preview} onCheckedChange={(c) => setV({ ...v, show_preview: c })} /></label>
           <Button variant="hero" className="w-full" disabled={busy}>{busy ? <HackerLoader compact label="Saving template" /> : "Save template"}</Button>
         </form>

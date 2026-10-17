@@ -106,7 +106,7 @@
   --glass-dialog: color-mix(in oklab, var(--card) 86%, transparent);
   --overlay: oklch(0.15 0.01 240 / 0.48);
   --glass-sheen: linear-gradient(125deg, var(--glass-highlight), transparent 46%);
-  --page-wash: url("/__l5e/assets-v1/5bbd7def-7af9-4b81-b6f5-a1c4b8f67717/dashboard-light-bg.webp");
+  --page-wash: url("/__l5e/assets-v1/78710235-a354-4e1b-b10a-27fb62c99662/dashboard-light-bg.webp");
   --shadow-glass: inset 0 1px 0 var(--glass-highlight), 0 12px 36px -20px color-mix(in oklab, var(--foreground) 22%, transparent);
   --shadow-glass-button: inset 0 1px 0 var(--glass-highlight), 0 4px 12px -6px color-mix(in oklab, var(--foreground) 24%, transparent);
   --hacker-ink: oklch(0.52 0.13 160);
@@ -121,7 +121,7 @@
 }
 
 .dark {
-  --page-wash: url("/__l5e/assets-v1/e974ab1a-6fc0-4489-9937-4f5029d7a72b/dashboard-dark-bg.webp");
+  --page-wash: url("/__l5e/assets-v1/b6c20e32-4399-41cf-9092-e5e94b496a87/dashboard-dark-bg.webp");
   --background: oklch(0.17 0.006 240);
   --dock-bg: color-mix(in oklab, var(--card) 75%, transparent);
   --foreground: oklch(0.96 0.005 250);

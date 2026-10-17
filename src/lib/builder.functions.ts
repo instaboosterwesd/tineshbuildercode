@@ -226,6 +226,14 @@ function templateFields(d: Record<string, unknown>) {
   };
 }
 
+export const adminUploadTemplateImage = createServerFn({ method: "POST" })
+  .inputValidator((d: { password: string; filename: string; image: string }) => ({ password: d?.password, ...validateLogoUpload(d) }))
+  .handler(async ({ data }) => {
+    checkPassword(data.password);
+    const { uploadImage } = await import("@/lib/image-upload");
+    return { url: await uploadImage(data.image) };
+  });
+
 export const adminSaveTemplate = createServerFn({ method: "POST" })
   .inputValidator((d: Record<string, unknown>) => ({
     password: d?.["password"] as string,
@@ -256,7 +264,7 @@ export const adminDeleteTemplate = createServerFn({ method: "POST" })
     checkPassword(data.password);
     const db = await adb();
     const t = await db.dbGet<{ image_url?: string; video_url?: string }>(`templates/${data.id}`);
-    const files = [t?.image_url, t?.video_url].filter((x): x is string => !!x);
+    const files = [t?.image_url, t?.video_url].filter((x): x is string => !!x && !/^https?:\/\//.test(x));
     if (files.length) await db.storageDelete(files);
     await db.dbRemove(`templates/${data.id}`);
     return { ok: true };

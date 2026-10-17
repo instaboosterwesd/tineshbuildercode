@@ -44,10 +44,17 @@ function Index() {
 
   return (
     <AppShell>
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pt-5 text-center sm:pt-10 lg:px-8">
+        <h1 className="text-2xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+          Build your <span className="text-gradient">Android app</span> in minutes
+        </h1>
+        <p className="mx-auto mt-2 max-w-xl text-sm text-muted-foreground sm:mt-3 sm:text-base">
+          Pick a template, add your name and logo, and get a ready APK.
+        </p>
+      </section>
 
-
-      <section className="sticky top-14 z-30 mx-auto max-w-6xl px-4 py-3 sm:top-16">
-        <div className="surface flex flex-col gap-2.5 p-3 backdrop-blur-xl sm:flex-row sm:items-center">
+      <section className="sticky top-14 z-30 mx-auto max-w-7xl px-4 py-3 sm:top-16 sm:py-5 lg:px-8">
+        <div className="surface mx-auto flex max-w-2xl flex-col gap-2.5 p-2.5 backdrop-blur-xl sm:flex-row sm:items-center sm:p-3">
           <div className="relative flex-1">
             <LottieIcon src={STICKERS.search} className="pointer-events-none absolute left-3 top-1/2 size-6 -translate-y-1/2" />
             <Input
@@ -60,8 +67,8 @@ function Index() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 pb-8 pt-2">
-        <p className="mb-3 text-sm text-muted-foreground">{list.length} template{list.length === 1 ? "" : "s"}</p>
+      <section className="relative z-10 mx-auto max-w-7xl px-4 pb-28 pt-1 lg:px-8">
+        <p className="mb-3 text-sm text-muted-foreground sm:mb-4">{list.length} template{list.length === 1 ? "" : "s"}</p>
         {list.length === 0 ? (
           <div className="surface grid place-items-center p-10 text-center sm:p-14">
             <span className="grid size-16 place-items-center rounded-3xl bg-accent text-accent-foreground shadow-soft">
