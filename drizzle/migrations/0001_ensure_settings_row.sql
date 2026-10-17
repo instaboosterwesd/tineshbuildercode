@@ -1,0 +1,1 @@
+COMMENT ON TABLE public.settings IS 'Single-row site settings (id = 1).';
