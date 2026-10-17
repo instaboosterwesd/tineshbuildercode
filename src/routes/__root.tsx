@@ -14,7 +14,6 @@ import { Wrench, LifeBuoy } from "lucide-react";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProfileCompletion } from "@/components/ProfileCompletion";
-import { UserTour } from "@/components/UserTour";
 import { themeInitScript } from "@/lib/theme";
 import { siteSettingsQuery } from "@/hooks/useSiteSettings";
 import { SiteAnnouncement } from "@/components/SiteAnnouncement";
@@ -144,7 +143,6 @@ function RootComponent() {
           <Outlet />
         </MaintenanceGate>
         <ProfileCompletion />
-        <UserTour />
         <Toaster richColors position="top-center" />
       </AuthProvider>
     </QueryClientProvider>

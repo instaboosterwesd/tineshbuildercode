@@ -6,10 +6,9 @@ import { Input } from "@/components/ui/input";
 import { HackerLoader } from "@/components/effects/HackerLoader";
 import { LottieIcon, preloadLottie } from "@/components/effects/LottieIcon";
 import video from "@/assets/splash.webm.asset.json";
-import emojiMail from "@/assets/emoji-mail.tgs.asset.json";
 import { STICKERS } from "@/lib/stickers";
 
-const LOGIN_STICKERS = [STICKERS.welcome, STICKERS.google, STICKERS.lock, STICKERS.editProfile, STICKERS.proceed, STICKERS.shield, emojiMail.url];
+const LOGIN_STICKERS = [STICKERS.welcome, STICKERS.google, STICKERS.lock, STICKERS.editProfile, STICKERS.proceed, STICKERS.shield, STICKERS.sendFlash];
 
 type Props = {
   mode: "login" | "signup";
@@ -46,7 +45,7 @@ export function LoginScreen({ mode, loading, busyAction, onSubmit, onGoogle, onM
         <p className="login-muted mt-2 flex items-center gap-1.5 text-sm"><LottieIcon src={STICKERS.shield} className="size-4" />{mode === "login" ? "Sign in to your account" : "Start building your next app"}</p>
       </div>
       {mode === "signup" && <div className="space-y-2"><label htmlFor="auth-name" className="flex items-center gap-2 text-sm font-medium"><LottieIcon src={STICKERS.editProfile} className="size-6" />Your name</label><Input id="auth-name" name="name" autoComplete="name" placeholder="Your name" required disabled={loading} /></div>}
-      <div className="space-y-2"><label htmlFor="auth-email" className="flex items-center gap-2 text-sm font-medium"><LottieIcon src={emojiMail.url} className="size-6" />Email</label><Input id="auth-email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required disabled={loading} /></div>
+      <div className="space-y-2"><label htmlFor="auth-email" className="flex items-center gap-2 text-sm font-medium"><LottieIcon src={STICKERS.sendFlash} className="size-6" />Email</label><Input id="auth-email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required disabled={loading} /></div>
       <div className="space-y-2"><label htmlFor="auth-password" className="flex items-center gap-2 text-sm font-medium"><LottieIcon src={STICKERS.lock} className="size-6" />Password</label><div className="relative"><Input id="auth-password" name="password" type={showPassword ? "text" : "password"} autoComplete={mode === "login" ? "current-password" : "new-password"} placeholder="Your password" required minLength={6} disabled={loading} className="pr-12" /><Button type="button" size="icon" variant="ghost" aria-label={showPassword ? "Hide password" : "Show password"} className="absolute right-1 top-1 size-9" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}</Button></div></div>
       <Button type="submit" variant="hero" className="h-12 w-full" disabled={loading}>{loading && busyAction !== "google" ? <HackerLoader compact label="Signing in" /> : <>{mode === "login" ? "Login" : "Sign up"}<LottieIcon src={STICKERS.proceed} className="size-5" /></>}</Button>
       <div className="flex items-center gap-3 text-xs login-muted"><span className="h-px flex-1 bg-current opacity-20" />or<span className="h-px flex-1 bg-current opacity-20" /></div>
