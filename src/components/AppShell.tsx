@@ -65,7 +65,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </nav>
           <div className="ml-auto flex items-center gap-1">
             {user ? (
-              <Link to="/wallet" className="flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-sm font-semibold">
+              <Link to="/wallet" className="flex items-center gap-1.5 rounded-full bg-card clay px-3 py-1.5 text-sm font-semibold">
                 <Wallet className="size-4 text-primary" /> ₹{wallet?.balance ?? 0}
               </Link>
             ) : (
