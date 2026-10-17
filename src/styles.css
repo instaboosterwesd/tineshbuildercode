@@ -54,6 +54,8 @@
 
 :root {
   --radius: 0.5rem;
+  /* Cards and glass panels stay generously rounded — never sharp corners. */
+  --radius-card: 1.5rem;
   --dock-bg: color-mix(in oklab, var(--card) 72%, transparent);
   --background: oklch(0.96 0.007 240);
   --foreground: oklch(0.2 0.025 260);
@@ -200,7 +202,7 @@
 }
 @utility pb-safe { padding-bottom: max(env(safe-area-inset-bottom), 0.5rem); }
 @utility surface {
-  border-radius: var(--radius);
+  border-radius: var(--radius-card);
   border: 1px solid var(--glass-border);
   background-color: var(--glass-fill);
   background-image: var(--glass-sheen);

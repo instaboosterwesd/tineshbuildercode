@@ -89,7 +89,7 @@ export function UserTour() {
 
   return createPortal(
     <div onClick={onBackdropClick} className="fixed inset-0 z-[100] flex items-end justify-center bg-background/70 p-4 backdrop-blur-sm sm:items-center" role="dialog" aria-modal="true" aria-label="App tour">
-      <div onClick={(e) => e.stopPropagation()} className="glass-dialog rounded-lg border w-full max-w-sm p-6">
+      <div onClick={(e) => e.stopPropagation()} className="glass-dialog rounded-3xl border w-full max-w-sm p-6">
         <div className="flex items-start justify-between">
           <span className="grid size-12 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
             <current.Icon className="size-6" />

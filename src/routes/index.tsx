@@ -1,7 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Image as ImageIcon, PlayCircle, Search, SearchX, Sparkles } from "lucide-react";
+import { Image as ImageIcon, PlayCircle } from "lucide-react";
+import { LottieIcon } from "@/components/effects/LottieIcon";
+import fireEmoji from "@/assets/emoji-fire.tgs.asset.json";
+import crownEmoji from "@/assets/emoji-home.tgs.asset.json";
+import giftEmoji from "@/assets/emoji-orders.tgs.asset.json";
 import { AppShell } from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
 import { BASE_APKS, baseApkLabel } from "@/lib/base-apks";
@@ -54,12 +58,12 @@ function Index() {
       <section className="sticky top-14 z-30 mx-auto max-w-6xl px-4 py-3 sm:top-16">
         <div className="surface flex flex-col gap-2.5 p-3 backdrop-blur-xl sm:flex-row sm:items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <LottieIcon src={fireEmoji.url} className="pointer-events-none absolute left-3 top-1/2 size-6 -translate-y-1/2" />
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search name or Product ID"
-              className="h-11 rounded-xl border-0 bg-muted/60 pl-11 shadow-none focus-visible:ring-1"
+              className="h-11 rounded-2xl border-0 bg-muted/60 pl-11 shadow-none focus-visible:ring-1"
             />
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -97,7 +101,7 @@ function Index() {
         {list.length === 0 ? (
           <div className="surface grid place-items-center p-10 text-center sm:p-14">
             <span className="grid size-16 place-items-center rounded-3xl bg-accent text-accent-foreground shadow-soft">
-              {templates.length ? <SearchX className="size-8" /> : <Sparkles className="size-8" />}
+              <LottieIcon src={templates.length ? fireEmoji.url : crownEmoji.url} className="size-10" />
             </span>
             <p className="mt-4 text-lg font-semibold">{templates.length ? "No templates match" : "No templates yet"}</p>
             <p className="mt-1 max-w-xs text-sm text-muted-foreground">
@@ -124,7 +128,7 @@ function Index() {
                   )}
                   {t.video && (
                     <span className="absolute right-2 top-2 flex items-center gap-1 rounded-full bg-card/90 px-2 py-0.5 text-[11px] backdrop-blur">
-                      <PlayCircle className="size-3 text-primary" /> Video
+                      <LottieIcon src={giftEmoji.url} className="size-4" /> Video
                     </span>
                   )}
                   <span className="absolute bottom-2 left-2 rounded-full bg-gradient-primary px-2.5 py-0.5 text-xs font-bold text-primary-foreground shadow-glow">
