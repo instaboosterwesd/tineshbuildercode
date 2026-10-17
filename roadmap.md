@@ -1,7 +1,9 @@
 # Roadmap
 
 ## Current task
+- [x] Use supplied light/dark backgrounds and round selected navigation; verified both image requests, theme toggle, and mobile layout without page errors.
 - [x] Emoji1 animated emojis in navigation and login.
+- [x] Apply the pasted sticker set (49 named Lottie icons) to navigation, home, login, wallet/add-funds, orders, profile and leaderboard; verified each page renders its stickers with no missing images.
 - [ ] Apply uploaded hacker loader to page, skeleton and action loading; match hacker glass colors; remove splash cursor; stabilize navigation; add suitable animated emoji.
 - [ ] Randomize new APK packages from com.tineshmod.a1 to com.tineshmod.a10 and run rule tests.
 - [ ] Apply separate Google button artwork when supplied (waiting for asset).

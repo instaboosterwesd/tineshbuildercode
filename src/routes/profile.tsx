@@ -3,7 +3,9 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useRef, useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Camera, KeyRound, LifeBuoy, LogOut, Monitor, Package, Save, Wallet } from "lucide-react";
+import { Camera, LifeBuoy, Monitor } from "lucide-react";
+import { LottieIcon, preloadLottie } from "@/components/effects/LottieIcon";
+import { STICKERS } from "@/lib/stickers";
 import { AppShell, PageHeader, RequireAuth, useWallet } from "@/components/AppShell";
 import { getMyProfile, updateMyProfile, uploadAvatar } from "@/lib/users.functions";
 import { myBuilds } from "@/lib/builder.functions";
@@ -51,8 +53,11 @@ function device(ua: string) {
   return `${br} on ${os}`;
 }
 
+const PROFILE_STICKERS = [STICKERS.editProfile, STICKERS.save, STICKERS.lock, STICKERS.telegram, STICKERS.historyTitle, STICKERS.logout, STICKERS.wallet, STICKERS.orders, STICKERS.verifiedBadge];
+
 function ProfileBody() {
   const { user } = useAuth();
+  useEffect(() => { preloadLottie(PROFILE_STICKERS); }, []);
   const qc = useQueryClient();
   const navigate = useNavigate();
   const fetchProfile = useServerFn(getMyProfile);
@@ -178,12 +183,12 @@ function ProfileBody() {
         </div>
         <div className="grid grid-cols-2 gap-3">
           <Link to="/wallet" className="clay-inset rounded-2xl px-4 py-3 text-center">
-            <Wallet className="mx-auto size-4 text-primary" />
+            <LottieIcon src={STICKERS.wallet} className="mx-auto size-6" />
             <div className="mt-1 font-bold">₹{wallet?.balance ?? data.balance}</div>
             <div className="text-xs text-muted-foreground">Balance</div>
           </Link>
           <Link to="/orders" className="clay-inset rounded-2xl px-4 py-3 text-center">
-            <Package className="mx-auto size-4 text-primary" />
+            <LottieIcon src={STICKERS.orders} className="mx-auto size-6" />
             <div className="mt-1 font-bold">{data.builds}</div>
             <div className="text-xs text-muted-foreground">Builds</div>
           </Link>
@@ -191,24 +196,24 @@ function ProfileBody() {
       </section>
 
       <section className="surface space-y-4 p-5">
-        <h3 className="font-semibold">Edit profile</h3>
+        <h3 className="flex items-center gap-2 font-semibold"><LottieIcon src={STICKERS.editProfile} className="size-6" /> Edit profile</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="name">Display name</Label>
             <Input id="name" value={name} maxLength={80} onChange={(e) => setName(e.target.value)} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="tg">Telegram username</Label>
+            <Label htmlFor="tg" className="flex items-center gap-2"><LottieIcon src={STICKERS.telegram} className="size-5" />Telegram username</Label>
             <Input id="tg" value={telegram} placeholder="@username" maxLength={64} onChange={(e) => setTelegram(e.target.value)} />
           </div>
         </div>
         <Button variant="hero" onClick={onSave} disabled={saving || !name.trim()}>
-          {saving ? <HackerLoader compact label="Saving changes" /> : <><Save className="size-4" /> Save changes</>}
+          {saving ? <HackerLoader compact label="Saving changes" /> : <><LottieIcon src={STICKERS.save} className="size-5" /> Save changes</>}
         </Button>
       </section>
 
       <section className="surface space-y-4 p-5">
-        <h3 className="flex items-center gap-2 font-semibold"><KeyRound className="size-4" /> Change password</h3>
+        <h3 className="flex items-center gap-2 font-semibold"><LottieIcon src={STICKERS.lock} className="size-5" /> Change password</h3>
         <div className="grid gap-4 sm:grid-cols-2">
           <Input type="password" placeholder="New password" value={pw} onChange={(e) => setPw(e.target.value)} />
           <Input type="password" placeholder="Confirm new password" value={pw2} onChange={(e) => setPw2(e.target.value)} />
@@ -220,7 +225,7 @@ function ProfileBody() {
 
       <section className="surface space-y-3 p-5">
         <div className="flex items-center justify-between">
-          <h3 className="font-semibold">Recent builds</h3>
+          <h3 className="flex items-center gap-2 font-semibold"><LottieIcon src={STICKERS.orders} className="size-5" /> Recent builds</h3>
           <Link to="/orders" className="text-sm font-medium text-primary">View all</Link>
         </div>
         {!builds ? <QueryFeedback label="recent builds" failed={buildsQuery.isError} retry={() => buildsQuery.refetch()} /> : !builds.length && <p className="text-sm text-muted-foreground">No builds yet.</p>}
@@ -236,7 +241,7 @@ function ProfileBody() {
       </section>
 
       <section className="surface space-y-3 p-5">
-        <h3 className="font-semibold">Login history</h3>
+        <h3 className="flex items-center gap-2 font-semibold"><LottieIcon src={STICKERS.historyTitle} className="size-6" /> Login history</h3>
         {!data.logins.length && <p className="text-sm text-muted-foreground">No logins recorded yet.</p>}
         {data.logins.map((l) => (
           <div key={l.id} className="flex items-center gap-3 border-b border-border/50 pb-2 text-sm last:border-0">
@@ -254,7 +259,7 @@ function ProfileBody() {
           </Button>
         )}
         <Button variant="destructive" className="w-full" onClick={onLogout}>
-          <LogOut className="size-4" /> Log out
+          <LottieIcon src={STICKERS.logout} className="size-5" /> Log out
         </Button>
       </div>
     </div>

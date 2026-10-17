@@ -17,5 +17,6 @@
 - Upload build logos through authenticated ImgBB server calls and store owner-scoped path-to-URL mappings in Firebase mediaFiles; resolve those mappings for orders and build callbacks because the configured Cloud Storage bucket is unavailable.
 - Shared surface and glass utilities own card/control treatment across routes; legacy clay classes are glass aliases to keep existing views consistent, with standard backdrop-filter only for production compatibility.
 - Keep decorative animations in reusable effects components with browser work inside effects and reduced-motion handling; user backgrounds mount in AppShell, while login media stays on the auth page so authentication and admin behavior remain unchanged.
+- Theme-specific dashboard images use the global background token and CDN asset pointers; UserBackground renders the same token without animation overlays so theme changes stay consistent and unobscured.
 - Use shared HackerLoader/LoadingPanel for loading feedback, with scoped timers and reduced-motion support; consistent states must not block navigation or alter unrelated text.
 - Choose new build package names server-side using the shared package-name module; ignore client package overrides and retain stored names for retries.

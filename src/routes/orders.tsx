@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Download, Package } from "lucide-react";
+import { useEffect } from "react";
+import { LottieIcon, preloadLottie } from "@/components/effects/LottieIcon";
+import { STICKERS } from "@/lib/stickers";
 import { AppShell, PageHeader, RequireAuth } from "@/components/AppShell";
 import { myBuilds } from "@/lib/builder.functions";
 import { Button } from "@/components/ui/button";
@@ -35,13 +37,14 @@ export const Route = createFileRoute("/orders")({
 
 function Orders() {
   const { user } = useAuth();
+  useEffect(() => { preloadLottie([STICKERS.orders, STICKERS.download]); }, []);
   const fetchBuilds = useServerFn(myBuilds);
   const { data, isError, refetch } = useQuery({ queryKey: ["my-builds", user?.uid], queryFn: () => withRequestTimeout(() => fetchBuilds()), refetchInterval: 15000, retry: false });
   if (!data) return <QueryFeedback label="your orders" failed={isError} retry={() => refetch()} />;
   if (!data.length)
     return (
       <div className="surface clay p-10 text-center">
-        <Package className="mx-auto size-10 text-primary" />
+        <LottieIcon src={STICKERS.orders} className="mx-auto size-10" />
         <p className="mt-3 font-semibold">No orders yet</p>
         <Button asChild variant="hero" className="mt-4"><Link to="/">Browse templates</Link></Button>
       </div>
@@ -53,7 +56,7 @@ function Orders() {
           {b.logo ? (
             <img src={b.logo} alt="" className="size-12 shrink-0 rounded-2xl object-cover" />
           ) : (
-            <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground"><Package className="size-5" /></span>
+            <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground"><LottieIcon src={STICKERS.orders} className="size-6" /></span>
           )}
           <div className="min-w-0 flex-1">
             <div className="truncate font-semibold">{b.app_name}</div>
@@ -65,7 +68,7 @@ function Orders() {
           <div className="flex flex-col items-end gap-2">
             <StatusBadge status={b.status} />
             {b.download && (
-              <Button asChild size="sm" variant="hero"><a href={b.download}><Download className="size-4" /> APK</a></Button>
+              <Button asChild size="sm" variant="hero"><a href={b.download}><LottieIcon src={STICKERS.download} className="size-5" /> APK</a></Button>
             )}
           </div>
         </div>

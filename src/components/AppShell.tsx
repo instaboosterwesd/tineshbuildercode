@@ -1,7 +1,7 @@
 import { Link, useNavigate, useMatchRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Wallet, Moon, Sun, LogIn } from "lucide-react";
+import { Moon, Sun, LogIn } from "lucide-react";
 import logoImg from "@/assets/logo.png";
 import { useEffect, type ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -13,13 +13,7 @@ import { withRequestTimeout } from "@/lib/request-timeout";
 import { useSiteName } from "@/hooks/useSiteSettings";
 import { LoadingPanel } from "@/components/effects/HackerLoader";
 import { LottieIcon, preloadLottie } from "@/components/effects/LottieIcon";
-import star from "@/assets/emoji-star.json.asset.json";
-import verified from "@/assets/emoji-verified.json.asset.json";
-import emojiHome from "@/assets/emoji-home.tgs.asset.json";
-import emojiWallet from "@/assets/emoji-wallet.tgs.asset.json";
-import emojiOrders from "@/assets/emoji-orders.tgs.asset.json";
-import emojiLeaders from "@/assets/emoji-leaders.tgs.asset.json";
-import emojiProfile from "@/assets/emoji-profile.tgs.asset.json";
+import { STICKERS } from "@/lib/stickers";
 import { UserBackground } from "@/components/effects/UserBackground";
 
 export function Logo({ to = "/" }: { to?: "/" }) {
@@ -56,11 +50,11 @@ export function useWallet() {
 }
 
 const NAV = [
-  { to: "/", label: "Home", emoji: emojiHome.url },
-  { to: "/wallet", label: "Wallet", emoji: emojiWallet.url },
-  { to: "/orders", label: "Orders", emoji: emojiOrders.url },
-  { to: "/leaderboard", label: "Leaders", emoji: emojiLeaders.url },
-  { to: "/profile", label: "Profile", emoji: emojiProfile.url },
+  { to: "/", label: "Home", emoji: STICKERS.home },
+  { to: "/wallet", label: "Wallet", emoji: STICKERS.wallet },
+  { to: "/orders", label: "Orders", emoji: STICKERS.orders },
+  { to: "/leaderboard", label: "Leaders", emoji: STICKERS.leaders },
+  { to: "/profile", label: "Profile", emoji: STICKERS.profile },
 ] as const;
 
 function DockLink({ to, label, emoji }: (typeof NAV)[number]) {
@@ -75,7 +69,7 @@ function DockLink({ to, label, emoji }: (typeof NAV)[number]) {
       aria-label={label}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-md px-2 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "group flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-full px-2 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         active ? "bg-primary/15 text-primary" : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
       )}
     >
@@ -130,7 +124,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 to="/wallet"
                 className="flex items-center gap-1.5 rounded-full border glass-panel px-3.5 py-2 text-sm font-semibold transition hover:-translate-y-0.5"
               >
-                <Wallet className="size-4 text-primary" /> {wallet ? `₹${wallet.balance}` : "—"}
+                <LottieIcon src={STICKERS.wallet} className="size-5" /> {wallet ? `₹${wallet.balance}` : "—"}
               </Link>
             ) : (
               <Button asChild size="sm" variant="hero" className="rounded-full">
@@ -152,7 +146,7 @@ export function PageHeader({ title, subtitle, action }: { title: string; subtitl
   return (
     <div className="mb-5 flex items-end justify-between gap-3">
       <div>
-        <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl">{title}{title === "Profile" ? <LottieIcon src={verified.url} className="size-7" /> : title === "Leaderboard" ? <LottieIcon src={star.url} className="size-7" /> : null}</h1>
+        <h1 className="flex items-center gap-2 text-2xl font-bold sm:text-3xl">{title}{title === "Profile" ? <LottieIcon src={STICKERS.verifiedBadge} className="size-7" /> : title === "Leaderboard" ? <LottieIcon src={STICKERS.leaders} className="size-7" /> : null}</h1>
         {subtitle && <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>}
       </div>
       {action}

@@ -106,7 +106,7 @@
   --glass-dialog: color-mix(in oklab, var(--card) 86%, transparent);
   --overlay: oklch(0.15 0.01 240 / 0.48);
   --glass-sheen: linear-gradient(125deg, var(--glass-highlight), transparent 46%);
-  --page-wash: radial-gradient(38rem 38rem at 8% 6%, color-mix(in oklab, var(--primary) 60%, transparent), transparent 70%), radial-gradient(34rem 34rem at 95% 22%, oklch(0.62 0.2 255 / 0.5), transparent 70%), radial-gradient(40rem 40rem at 60% 105%, color-mix(in oklab, var(--primary-glow) 45%, transparent), transparent 70%);
+  --page-wash: url("/__l5e/assets-v1/3ca74e67-844b-4446-a44f-0c1096dfa0fe/dashboard-light-bg.webp");
   --shadow-glass: inset 0 1px 0 var(--glass-highlight), 0 12px 36px -20px color-mix(in oklab, var(--foreground) 22%, transparent);
   --shadow-glass-button: inset 0 1px 0 var(--glass-highlight), 0 4px 12px -6px color-mix(in oklab, var(--foreground) 24%, transparent);
   --hacker-ink: oklch(0.52 0.13 160);
@@ -121,6 +121,7 @@
 }
 
 .dark {
+  --page-wash: url("/__l5e/assets-v1/22659d34-577c-462c-82c0-50932c37088a/dashboard-dark-bg.webp");
   --background: oklch(0.17 0.006 240);
   --dock-bg: color-mix(in oklab, var(--card) 75%, transparent);
   --foreground: oklch(0.96 0.005 250);
@@ -180,6 +181,9 @@
     background-color: var(--color-background);
     background-image: var(--page-wash);
     background-attachment: fixed;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
     min-height: 100dvh;
     color: var(--color-foreground);
     font-family: var(--font-sans);
@@ -267,6 +271,7 @@
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
 .user-effects { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+.dashboard-background { background-image: var(--page-wash); background-size: cover; background-position: center; background-repeat: no-repeat; }
 .hacker-background { display: block; width: 100%; height: 100%; opacity: 0.23; }
 .splash-cursor { position: fixed; inset: 0; pointer-events: none; z-index: 1; opacity: 0.65; }
 .splash-cursor[data-contained] { position: absolute; }
@@ -274,7 +279,7 @@
 .user-shell { position: relative; isolation: isolate; }
 .user-shell > header, .user-shell > main { position: relative; z-index: 2; }
 .user-shell > header { position: sticky; }
-.login-screen { position: relative; isolation: isolate; color: var(--login-foreground); background-color: var(--background); background-image: var(--page-wash); background-attachment: fixed; }
+.login-screen { position: relative; isolation: isolate; color: var(--login-foreground); background-color: var(--background); background-image: var(--page-wash); background-attachment: fixed; background-size: cover; background-position: center; }
 .login-video, .login-video-overlay { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -2; }
 .login-video { object-fit: cover; }
 .login-video-overlay { background: var(--login-overlay); z-index: -1; }

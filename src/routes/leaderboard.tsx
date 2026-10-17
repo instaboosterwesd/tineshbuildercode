@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Trophy } from "lucide-react";
+import { useEffect } from "react";
+import { LottieIcon, preloadLottie } from "@/components/effects/LottieIcon";
+import { STICKERS } from "@/lib/stickers";
 import { AppShell, PageHeader } from "@/components/AppShell";
 import { leaderboard } from "@/lib/builder.functions";
 import { cn } from "@/lib/utils";
@@ -32,6 +34,7 @@ export const Route = createFileRoute("/leaderboard")({
 const medal = ["bg-warning/30 text-warning", "bg-muted-foreground/30", "bg-primary/30"];
 
 function Board() {
+  useEffect(() => { preloadLottie([STICKERS.leaders]); }, []);
   const fetchLeaderboard = useServerFn(leaderboard);
   const { data, isError, refetch } = useQuery({ queryKey: ["leaderboard"], queryFn: () => withRequestTimeout(() => fetchLeaderboard()), retry: false, staleTime: 30_000 });
   if (!data) return <QueryFeedback label="the leaderboard" failed={isError} retry={() => refetch()} />;
@@ -41,7 +44,7 @@ function Board() {
       {data.map((r) => (
         <div key={r.rank} className="surface clay flex items-center gap-4 px-4 py-3">
           <span className={cn("grid size-10 shrink-0 place-items-center rounded-full font-bold", medal[r.rank - 1] ?? "clay-inset")}>
-            {r.rank <= 3 ? <Trophy className="size-4" /> : r.rank}
+            {r.rank <= 3 ? <LottieIcon src={STICKERS.leaders} className="size-5" /> : r.rank}
           </span>
           <span className="flex-1 truncate font-semibold">{r.name}</span>
           <span className="text-sm font-bold text-primary">{r.builds} {r.builds === 1 ? "build" : "builds"}</span>
