@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1792208115511,
-      "tag": "0000_migration",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1792209001747,
-      "tag": "0001_ensure_settings_row",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1792212271920,
-      "tag": "0002_profile_avatar",
+      "when": 1792214559586,
+      "tag": "0000_empty_remix_baseline",
       "breakpoints": true
     }
   ]
